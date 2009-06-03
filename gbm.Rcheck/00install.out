@@ -1,0 +1,59 @@
+* Installing *source* package 'gbm' ...
+** libs
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c adaboost.cpp -o adaboost.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c bernoulli.cpp -o bernoulli.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c bisquare.cpp -o bisquare.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c coxph.cpp -o coxph.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c dataset.cpp -o dataset.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c distribution.cpp -o distribution.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c gaussian.cpp -o gaussian.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c gbm.cpp -o gbm.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c gbm_engine.cpp -o gbm_engine.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c gbmentry.cpp -o gbmentry.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c huberized.cpp -o huberized.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c kclass.cpp -o kclass.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c laplace.cpp -o laplace.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c locationm.cpp -o locationm.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node_categorical.cpp -o node_categorical.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node_continuous.cpp -o node_continuous.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node.cpp -o node.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node_factory.cpp -o node_factory.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node_nonterminal.cpp -o node_nonterminal.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node_search.cpp -o node_search.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c node_terminal.cpp -o node_terminal.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c poisson.cpp -o poisson.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c quantile.cpp -o quantile.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c tdist.cpp -o tdist.o
+g++ -I/usr/share/R/include      -fpic  -g -O2 -c tree.cpp -o tree.o
+g++ -shared  -o gbm.so adaboost.o bernoulli.o bisquare.o coxph.o dataset.o distribution.o gaussian.o gbm.o gbm_engine.o gbmentry.o huberized.o kclass.o laplace.o locationm.o node_categorical.o node_continuous.o node.o node_factory.o node_nonterminal.o node_search.o node_terminal.o poisson.o quantile.o tdist.o tree.o   -L/usr/lib/R/lib -lR
+** R
+** demo
+** inst
+** preparing package for lazy loading
+Loading required package: survival
+Loading required package: splines
+Loading required package: lattice
+** help
+Note: removing empty section \details
+Note: removing empty section \examples
+Note: removing empty section \examples
+ >>> Building/Updating help pages for package 'gbm'
+     Formats: text html latex example 
+  basehaz.gbm                       text    html    latex
+  calibrate.plot                    text    html    latex   example
+  gbm-package                       text    html    latex
+  gbm                               text    html    latex   example
+  gbm.object                        text    html    latex
+  gbm.perf                          text    html    latex
+  interact.gbm                      text    html    latex
+  plot.gbm                          text    html    latex
+  predict.gbm                       text    html    latex
+  pretty.gbm.tree                   text    html    latex
+  print.gbm                         text    html    latex   example
+  quantile.rug                      text    html    latex   example
+  relative.influence                text    html    latex
+  shrink.gbm                        text    html    latex
+  shrink.gbm.pred                   text    html    latex
+  summary.gbm                       text    html    latex
+** building package indices ...
+* DONE (gbm)

@@ -1,0 +1,1166 @@
+\documentclass{article}
+\usepackage[ae,hyper]{Rd}
+\begin{document}
+\HeaderA{print.gbm}{~~function to do ... ~~}{print.gbm}
+\keyword{models}{print.gbm}
+\keyword{nonlinear}{print.gbm}
+\keyword{survival}{print.gbm}
+\keyword{nonparametric}{print.gbm}
+\keyword{tree}{print.gbm}
+\begin{Description}\relax
+Display basic information about a \code{gbm} object.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+print.gbm(x, ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] an object of class \code{gbm}. 
+\item[\code{...}] arguments passed to \code{print.default}. 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+Prints some information about the model object. In particular, the call
+to the model fitting function is given, and the type of loss function
+that was used is given, as is the total number of iterations.
+
+If cross-validation was performed, the 'best' number of trees as
+estimated
+by cross-validation error is
+dispalyed. If a test set was used, the 'best' number
+of trees as estimated by the test set error is displayed.
+
+The number of available predictors, and the number of those having
+non-zero influence on predictions is given (which might be interesting
+in data mining applications).
+
+If K-class, Bernoulli or adaboost classification was performed,
+the confusion matrix and prediction accuracy are printed (objects
+being allocated to the class with highest probability for K-class
+and Bernoulli). These classifications are performed on the entire
+training
+data using the model with the 'best' number of trees as described
+above, or the maximum number of trees if the 'best' can't be
+computed.
+
+If the 'distribution' was specified as Gaussian, Laplace, quantile,
+bisquare or t-distribution, a summary of the residuals is displayed.
+The residuals are for the training data with the model at the 'best' number of trees, as
+described above, or the maximum number of trees if the 'best' can't
+be computed.
+\end{Details}
+\begin{Author}\relax
+Harry Southworth, Daniel Edwards
+\end{Author}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+\begin{Examples}
+\begin{ExampleCode}
+library( gbm )
+data( iris )
+iris.mod <- gbm( Species ~ ., distribution="kclass", data=iris,
+                 n.trees=2000, shrinkage=.01, cv.folds=5 )
+iris.mod
+data( lung )
+lung.mod <- gbm( Surv(time, status) ~ ., distribution="coxph", data=lung,
+                 n.trees=2000, shrinkage=.01, cv.folds=5 )
+lung.mod
+\end{ExampleCode}
+\end{Examples}
+
+\HeaderA{calibrate.plot}{Calibration plot}{calibrate.plot}
+\keyword{hplot}{calibrate.plot}
+\begin{Description}\relax
+An experimental diagnostic tool that plots the fitted values versus the actual average values.
+Currently developed for only \code{distribution="bernoulli"}.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+calibrate.plot(y,p,
+               distribution="bernoulli",
+               replace=TRUE,
+               line.par=list(col="black"),
+               shade.col="lightyellow",
+               shade.density=NULL,
+               rug.par=list(side=1),
+               xlab="Predicted value",
+               ylab="Observed average",
+               xlim=NULL,ylim=NULL,
+               knots=NULL,df=6,
+               ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{y}] the outcome 0-1 variable 
+\item[\code{p}] the predictions estimating E(y|x) 
+\item[\code{distribution}] the loss function used in creating \code{p}.
+\code{bernoulli} and \code{poisson} are currently the
+only special options. All others default to squared error
+assuming \code{gaussian}
+\item[\code{replace}] determines whether this plot will replace or overlay the current plot.
+\code{replace=FALSE} is useful for comparing the calibration of several
+methods
+\item[\code{line.par}] graphics parameters for the line 
+\item[\code{shade.col}] color for shading the 2 SE region. \code{shade.col=NA} implies no 2 SE
+region
+\item[\code{shade.density}] the \code{density} parameter for \code{\LinkA{polygon}{polygon}}
+\item[\code{rug.par}] graphics parameters passed to \code{\LinkA{rug}{rug}}
+\item[\code{xlab}] x-axis label corresponding to the predicted values
+\item[\code{ylab}] y-axis label corresponding to the observed average
+\item[\code{xlim,ylim}] x and y-axis limits. If not specified te function will select
+limits
+\item[\code{knots,df}] these parameters are passed directly to 
+\code{\LinkA{ns}{ns}} for constructing a natural spline 
+smoother for the calibration curve
+\item[\code{...}] other graphics parameters passed on to the plot function 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+Uses natural splines to estimate E(y|p). Well-calibrated predictions
+imply that E(y|p) = p. The plot also includes a pointwise 95
+band.
+\end{Details}
+\begin{Value}
+\code{calibrate.plot} returns no values.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.F. Yates (1982). "External correspondence: decomposition of the mean
+probability score," Organisational Behaviour and Human Performance 30:132-156.
+
+D.J. Spiegelhalter (1986). "Probabilistic Prediction in Patient Management
+and Clinical Trials," Statistics in Medicine 5:421-433.
+\end{References}
+\begin{Examples}
+\begin{ExampleCode}
+library(rpart)
+data(kyphosis)
+y <- as.numeric(kyphosis$Kyphosis)-1
+x <- kyphosis$Age
+glm1 <- glm(y~poly(x,2),family=binomial)
+p <- predict(glm1,type="response")
+calibrate.plot(y, p, xlim=c(0,0.6), ylim=c(0,0.6))
+\end{ExampleCode}
+\end{Examples}
+
+\HeaderA{basehaz.gbm}{Baseline hazard function}{basehaz.gbm}
+\keyword{methods}{basehaz.gbm}
+\keyword{survival}{basehaz.gbm}
+\begin{Description}\relax
+Computes the Breslow estimator of the baseline hazard function for a proportional hazard regression model
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+basehaz.gbm(t, delta, f.x, 
+            t.eval = NULL, 
+            smooth = FALSE, 
+            cumulative = TRUE)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{t}] the survival times 
+\item[\code{delta}] the censoring indicator 
+\item[\code{f.x}] the predicted values of the regression model on the log hazard scale 
+\item[\code{t.eval}] values at which the baseline hazard will be evaluated 
+\item[\code{smooth}] if \code{TRUE} \code{basehaz.gbm} will smooth the estimated baseline hazard using Friedman's super smoother \code{\LinkA{supsmu}{supsmu}}
+\item[\code{cumulative}] if \code{TRUE} the cumulative survival function will be computed 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+The proportional hazard model assumes h(t|x)=lambda(t)*exp(f(x)). \code{\LinkA{gbm}{gbm}} can estimate the f(x) component via partial likelihood. After estimating f(x), \code{basehaz.gbm} can compute the a nonparametric estimate of lambda(t).
+\end{Details}
+\begin{Value}
+a vector of length equal to the length of t (or of length \code{t.eval} if \code{t.eval} is not \code{NULL} containing the baseline hazard evaluated at t (or at \code{t.eval} if \code{t.eval} is not \code{NULL}). If \code{cumulative} is set to \code{TRUE} then the returned vector evaluates the cumulative hazard function at those values.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+N. Breslow (1972). "Disussion of `Regression Models and Life-Tables' by D.R. Cox," Journal of the Royal Statistical Society, Series B, 34(2):216-217.
+
+N. Breslow (1974). "Covariance analysis of censored survival data," Biometrics 30:89-99.
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{survfit}{survfit}}, \code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+
+\HeaderA{gbm.object}{Generalized Boosted Regression Model Object}{gbm.object}
+\keyword{methods}{gbm.object}
+\begin{Description}\relax
+These are objects representing fitted \code{gbm}s.
+\end{Description}
+\begin{Value}
+\begin{ldescription}
+\item[\code{initF}] the "intercept" term, the initial predicted value to which trees
+make adjustments
+\item[\code{fit}] a vector containing the fitted values on the scale of regression
+function (e.g. log-odds scale for bernoulli, log scale for poisson)
+\item[\code{train.error}] a vector of length equal to the number of fitted trees
+containing the value of the loss function for each boosting iteration
+evaluated on the training data
+\item[\code{valid.error}] a vector of length equal to the number of fitted trees
+containing the value of the loss function for each boosting iteration
+evaluated on the validation data
+\item[\code{cv.error}] if \code{cv.folds}<2 this component is NULL. Otherwise, this 
+component is a vector of length equal to the number of fitted trees
+containing a cross-validated estimate of the loss function for each boosting 
+iteration
+\item[\code{oobag.improve}] a vector of length equal to the number of fitted trees
+containing an out-of-bag estimate of the marginal reduction in the expected
+value of the loss function. The out-of-bag estimate uses only the training
+data and is useful for estimating the optimal number of boosting iterations.
+See \code{\LinkA{gbm.perf}{gbm.perf}}
+\item[\code{trees}] a list containing the tree structures. The components are best
+viewed using \code{\LinkA{pretty.gbm.tree}{pretty.gbm.tree}}
+\item[\code{c.splits}] a list of all the categorical splits in the collection of
+trees. If the \code{trees[[i]]} component of a \code{gbm} object describes a
+categorical split then the splitting value will refer to a component of
+\code{c.splits}. That component of \code{c.splits} will be a vector of length
+equal to the number of levels in the categorical split variable. -1 indicates
+left, +1 indicates right, and 0 indicates that the level was not present in the
+training data
+\end{ldescription}
+\end{Value}
+\begin{Section}{Structure}
+The following components must be included in a legitimate \code{gbm} object.
+\end{Section}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+
+\HeaderA{gbm-package}{Generalized Boosted Regression Models}{gbm.Rdash.package}
+\keyword{package}{gbm-package}
+\begin{Description}\relax
+This package implements extensions to Freund and
+Schapire's AdaBoost algorithm and J. Friedman's gradient
+boosting machine. Includes regression methods for least
+squares, absolute loss, logistic, Poisson, Cox proportional
+hazards partial likelihood, and AdaBoost exponential loss.
+\end{Description}
+\begin{Details}\relax
+\Tabular{ll}{
+Package: & gbm\\
+Version: & 1.5-6\\
+Date: & 2006-1-20\\
+Depends: & R (>= 2.1.0), survival, lattice, mgcv\\
+License: & GPL (version 2 or newer)\\
+URL: & http://www.i-pensieri.com/gregr/gbm.shtml\\
+Built: & R 2.2.1; i386-pc-mingw32; 2006-02-24 18:09:42; windows\\
+}
+
+Index:
+\begin{alltt}
+basehaz.gbm             Baseline hazard function
+calibrate.plot          Calibration plot
+gbm                     Generalized Boosted Regression Modeling
+gbm.object              Generalized Boosted Regression Model Object
+gbm.perf                GBM performance
+plot.gbm                Marginal plots of fitted gbm objects
+predict.gbm             Predict method for GBM Model Fits
+pretty.gbm.tree         Print gbm tree components
+quantile.rug            Quantile rug plot
+relative.influence      Methods for estimating relative influence
+shrink.gbm              L1 shrinkage of the predictor variables in a
+                        GBM
+shrink.gbm.pred         Predictions from a shrunked GBM
+summary.gbm             Summary of a gbm object
+\end{alltt}
+
+Further information is available in the following vignettes:
+\Tabular{ll}{
+\code{gbm} & Generalized Boosted Models: A guide to the gbm package (source, pdf)\\
+}
+\end{Details}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+Y. Freund and R.E. Schapire (1997) \dQuote{A decision-theoretic generalization of
+on-line learning and an application to boosting,} \emph{Journal of Computer and
+System Sciences,} 55(1):119-139.
+
+G. Ridgeway (1999). \dQuote{The state of boosting,} \emph{Computing Science and
+Statistics} 31:172-181.
+
+J.H. Friedman, T. Hastie, R. Tibshirani (2000). \dQuote{Additive Logistic Regression:
+a Statistical View of Boosting,} \emph{Annals of Statistics} 28(2):337-374.
+
+J.H. Friedman (2001). \dQuote{Greedy Function Approximation: A Gradient Boosting
+Machine,} \emph{Annals of Statistics} 29(5):1189-1232.
+
+J.H. Friedman (2002). \dQuote{Stochastic Gradient Boosting,} \emph{Computational Statistics
+and Data Analysis} 38(4):367-378.
+
+\url{http://www.i-pensieri.com/gregr/gbm.shtml}
+
+\url{http://www-stat.stanford.edu/~jhf/R-MART.html}
+\end{References}
+
+\HeaderA{gbm.perf}{GBM performance}{gbm.perf}
+\keyword{nonlinear}{gbm.perf}
+\keyword{survival}{gbm.perf}
+\keyword{nonparametric}{gbm.perf}
+\keyword{tree}{gbm.perf}
+\begin{Description}\relax
+Estimates the optimal number of boosting iterations for a \code{gbm} object and
+optionally plots various performance measures
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+gbm.perf(object, 
+         plot.it = TRUE, 
+         oobag.curve = FALSE, 
+         overlay = TRUE, 
+         method)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] a \code{\LinkA{gbm.object}{gbm.object}} created from an initial call to 
+\code{\LinkA{gbm}{gbm}}.
+\item[\code{plot.it}] an indicator of whether or not to plot the performance measures.
+Setting \code{plot.it=TRUE} creates two plots. The first plot plots 
+\code{object\$train.error} (in black) and \code{object\$valid.error} (in red) 
+versus the iteration number. The scale of the error measurement, shown on the 
+left vertical axis, depends on the \code{distribution} argument used in the 
+initial call to \code{\LinkA{gbm}{gbm}}.
+\item[\code{oobag.curve}] indicates whether to plot the out-of-bag performance measures
+in a second plot.
+\item[\code{overlay}] if TRUE and oobag.curve=TRUE then a right y-axis is added to the 
+training and test error plot and the estimated cumulative improvement in the loss 
+function is plotted versus the iteration number.
+\item[\code{method}] indicate the method used to estimate the optimal number
+of boosting iterations. \code{method="OOB"} computes the out-of-bag
+estimate and \code{method="test"} uses the test (or validation) dataset 
+to compute an out-of-sample estimate. \code{method="cv"} extracts the 
+optimal number of iterations using cross-validation if \code{gbm} was called
+with \code{cv.folds}>1
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+\code{gbm.perf} returns the estimated optimal number of iterations. The method 
+of computation depends on the \code{method} argument.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+G. Ridgeway (2003). "A note on out-of-bag estimation for estimating the optimal
+number of boosting iterations," a working paper available at
+\url{http://www.i-pensieri.com/gregr/gbm.shtml}.
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}, \code{\LinkA{gbm.object}{gbm.object}}
+\end{SeeAlso}
+
+\HeaderA{plot.gbm}{Marginal plots of fitted gbm objects}{plot.gbm}
+\keyword{hplot}{plot.gbm}
+\begin{Description}\relax
+Plots the marginal effect of the selected variables by "integrating" out the other variables.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+## S3 method for class 'gbm':
+plot(x,
+     i.var = 1,
+     n.trees = x$n.trees,
+     continuous.resolution = 100,
+     return.grid = FALSE,
+     type = "link",
+     ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] a \code{\LinkA{gbm.object}{gbm.object}} fitted using a call to \code{\LinkA{gbm}{gbm}}
+\item[\code{i.var}] a vector of indices or the names of the variables to plot. If
+using indices, the variables are indexed in the same order that they appear
+in the initial \code{gbm} formula.
+If \code{length(i.var)} is between 1 and 3 then \code{plot.gbm} produces the plots. Otherwise,
+\code{plot.gbm} returns only the grid of evaluation points and their average predictions
+\item[\code{n.trees}] the number of trees used to generate the plot. Only the first
+\code{n.trees} trees will be used
+\item[\code{continuous.resolution}] The number of equally space points at which to
+evaluate continuous predictors 
+\item[\code{return.grid}] if \code{TRUE} then \code{plot.gbm} produces no graphics and only returns
+the grid of evaluation points and their average predictions. This is useful for
+customizing the graphics for special variable types or for dimensions greater
+than 3 
+\item[\code{type}] the type of prediction to plot on the vertical axis. See
+\code{predict.gbm}
+\item[\code{...}] other arguments passed to the plot function 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+\code{plot.gbm} produces low dimensional projections of the
+\code{\LinkA{gbm.object}{gbm.object}} by integrating out the variables not included in the
+\code{i.var} argument. The function selects a grid of points and uses the
+weighted tree traversal method described in Friedman (2001) to do the
+integration. Based on the variable types included in the projection,
+\code{plot.gbm} selects an appropriate display choosing amongst line plots,
+contour plots, and \code{\LinkA{lattice}{lattice}} plots. If the default graphics
+are not sufficient the user may set \code{return.grid=TRUE}, store the result
+of the function, and develop another graphic display more appropriate to the
+particular example.
+\end{Details}
+\begin{Value}
+Nothing unless \code{return.grid} is true then \code{plot.gbm} produces no
+graphics and only returns the grid of evaluation points and their average
+predictions.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.H. Friedman (2001). "Greedy Function Approximation: A Gradient Boosting
+Machine," Annals of Statistics 29(4).
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}, \code{\LinkA{gbm.object}{gbm.object}}, \code{\LinkA{plot}{plot}}
+\end{SeeAlso}
+
+\HeaderA{relative.influence}{Methods for estimating relative influence}{relative.influence}
+\aliasA{gbm.loss}{relative.influence}{gbm.loss}
+\aliasA{permutation.test.gbm}{relative.influence}{permutation.test.gbm}
+\keyword{hplot}{relative.influence}
+\begin{Description}\relax
+Helper functions for computing the relative influence of each variable in the gbm object.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+relative.influence(object, n.trees, scale., sort.)
+permutation.test.gbm(object, n.trees)
+gbm.loss(y,f,w,offset,dist,baseline)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] a \code{gbm} object created from an initial call to \code{\LinkA{gbm}{gbm}}.
+\item[\code{n.trees}] the number of trees to use for computations. If not provided, the
+the function will guess: if a test set was used in fitting, the number of
+trees resulting in lowest test set error will be used; otherwise, if
+cross-validation was performed, the number of trees resulting in lowest
+cross-validation error will be used; otherwise, all trees will be used.
+\item[\code{scale.}] whether or not the result should be scaled. Defaults to \code{FALSE}.
+\item[\code{sort.}] whether or not the results should be (reverse) sorted.
+Defaults to \code{FALSE}.
+\item[\code{y,f,w,offset,dist,baseline}] For \code{gbm.loss}: These components are the
+outcome, predicted value, observation weight, offset, distribution, and comparison
+loss function, respectively.
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+This is not intended for end-user use. These functions offer the different
+methods for computing the relative influence in \code{\LinkA{summary.gbm}{summary.gbm}}.
+\code{gbm.loss} is a helper function for \code{permutation.test.gbm}.
+\end{Details}
+\begin{Value}
+By default, returns an unprocessed vector of estimated relative influences.
+If the \code{scale.} and \code{sort.} arguments are used, returns a processed
+version of the same.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.H. Friedman (2001). "Greedy Function Approximation: A Gradient Boosting
+Machine," Annals of Statistics 29(5):1189-1232.
+
+L. Breiman (2001). "Random Forests," Available at \url{ftp://ftp.stat.berkeley.edu/pub/users/breiman/randomforest2001.pdf}.
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{summary.gbm}{summary.gbm}}
+\end{SeeAlso}
+
+\HeaderA{quantile.rug}{Quantile rug plot}{quantile.rug}
+\keyword{aplot}{quantile.rug}
+\begin{Description}\relax
+Marks the quantiles on the axes of the current plot.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+quantile.rug(x,prob=(0:10)/10,...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] a numeric vector.
+\item[\code{prob}] the quantiles of x to mark on the x-axis.
+\item[\code{...}] additional graphics parameters currently ignored.
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+No return values
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+\url{http://www.i-pensieri.com/gregr/gbm.shtml}
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{plot}{plot}}, 
+\code{\LinkA{quantile}{quantile}}, 
+\code{\LinkA{jitter}{jitter}}, 
+\code{\LinkA{rug}{rug}}.
+\end{SeeAlso}
+\begin{Examples}
+\begin{ExampleCode}
+x <- rnorm(100)
+y <- rnorm(100)
+plot(x,y)
+quantile.rug(x)
+\end{ExampleCode}
+\end{Examples}
+
+\HeaderA{summary.gbm}{Summary of a gbm object}{summary.gbm}
+\keyword{hplot}{summary.gbm}
+\begin{Description}\relax
+Computes the relative influence of each variable in the gbm object.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+## S3 method for class 'gbm':
+summary(object,
+        cBars=length(object$var.names),
+        n.trees=object$n.trees,
+        plotit=TRUE,
+        order=TRUE,
+        method=relative.influence,
+        normalize=TRUE,
+        ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] a \code{gbm} object created from an initial call to
+\code{\LinkA{gbm}{gbm}}.
+\item[\code{cBars}] the number of bars to plot. If \code{order=TRUE} the only the
+variables with the \code{cBars} largest relative influence will appear in the
+barplot. If \code{order=FALSE} then the first \code{cBars} variables will
+appear in the plot. In either case, the function will return the relative
+influence of all of the variables.
+\item[\code{n.trees}] the number of trees used to generate the plot. Only the first
+\code{n.trees} trees will be used.
+\item[\code{plotit}] an indicator as to whether the plot is generated. 
+\item[\code{order}] an indicator as to whether the plotted and/or returned relative
+influences are sorted. 
+\item[\code{method}] The function used to compute the relative influence.
+\code{\LinkA{relative.influence}{relative.influence}} is the default and is the same as that
+described in Friedman (2001). The other current (and experimental) choice is
+\code{\LinkA{permutation.test.gbm}{permutation.test.gbm}}. This method randomly permutes each predictor
+variable at a time and computes the associated reduction in predictive
+performance. This is similar to the variable importance measures Breiman uses
+for random forests, but \code{gbm} currently computes using the entire training
+dataset (not the out-of-bag observations.
+\item[\code{normalize}] if \code{FALSE} then \code{summary.gbm} returns the 
+unnormalized influence. 
+\item[\code{...}] other arguments passed to the plot function. 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+For \code{distribution="gaussian"} this returns exactly the reduction 
+of squared error attributable to each variable. For other loss functions this 
+returns the reduction attributeable to each varaible in sum of squared error in 
+predicting the gradient on each iteration. It describes the relative influence 
+of each variable in reducing the loss function. See the references below for 
+exact details on the computation.
+\end{Details}
+\begin{Value}
+Returns a data frame where the first component is the variable name and the
+second is the computed relative influence, normalized to sum to 100.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.H. Friedman (2001). "Greedy Function Approximation: A Gradient Boosting
+Machine," Annals of Statistics 29(5):1189-1232.
+
+L. Breiman (2001). "Random Forests," Available at \url{ftp://ftp.stat.berkeley.edu/pub/users/breiman/randomforest2001.pdf}.
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+
+\HeaderA{interact.gbm}{Estimate the strength of interaction effects}{interact.gbm}
+\keyword{methods}{interact.gbm}
+\begin{Description}\relax
+Computes Friedman's H-statistic to assess the strength of variable interactions.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+interact.gbm(x,
+             data,
+             i.var = 1,
+             n.trees = x$n.trees)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] a \code{\LinkA{gbm.object}{gbm.object}} fitted using a call to \code{\LinkA{gbm}{gbm}}
+\item[\code{data}] the dataset used to construct \code{x}. If the original dataset is
+large, a random subsample may be used to accelerate the computation in
+\code{interact.gbm}
+\item[\code{i.var}] a vector of indices or the names of the variables for compute
+the interaction effect. If using indices, the variables are indexed in the
+same order that they appear in the initial \code{gbm} formula.
+\item[\code{n.trees}] the number of trees used to generate the plot. Only the first
+\code{n.trees} trees will be used
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+\code{interact.gbm} computes Friedman's H-statistic to assess the relative
+strength of interaction effects in non-linear models. H is on the scale of
+[0-1] with higher values indicating larger interaction effects. To connect to
+a more familiar measure, if \eqn{x_1}{} and \eqn{x_2}{} are uncorrelated covariates
+with mean 0 and variance 1 and the model is of the form
+\deqn{y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3}{}
+then
+\deqn{H=\frac{\beta_3}{\sqrt{\beta_1^2+\beta_2^2+\beta_3^2}}}{}
+\end{Details}
+\begin{Value}
+Returns the value of \eqn{H}{}.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.H. Friedman and B.E. Popescu (2005). \dQuote{Predictive Learning via Rule
+Ensembles.} Section 8.1
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}, \code{\LinkA{gbm.object}{gbm.object}}
+\end{SeeAlso}
+
+\HeaderA{shrink.gbm}{L1 shrinkage of the predictor variables in a GBM}{shrink.gbm}
+\keyword{methods}{shrink.gbm}
+\begin{Description}\relax
+Performs recursive shrinkage in each of the trees in a GBM fit using different shrinkage parameters for each variable.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+shrink.gbm(object, 
+           n.trees, 
+           lambda = rep(10, length(object$var.names)), 
+           ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] A \code{\LinkA{gbm.object}{gbm.object}} 
+\item[\code{n.trees}] the number of trees to use 
+\item[\code{lambda}] a vector with length equal to the number of variables containing the shrinkage parameter for each variable 
+\item[\code{...}] other parameters (ignored) 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+This function is currently experimental. Used in conjunction with a gradient ascent search for inclusion of variables.
+\end{Details}
+\begin{Value}
+\begin{ldescription}
+\item[\code{predF}] Predicted values from the shrunken tree
+\item[\code{objective}] The value of the loss function associated with the predicted values
+\item[\code{gradient}] A vector with length equal to the number of variables containing the derivative of the objective function with respect to beta, the logit transform of the shrinkage parameter for each variable
+\end{ldescription}
+\end{Value}
+\begin{Section}{Warning}
+This function is experimental.
+\end{Section}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+Hastie, T. J., and Pregibon, D. "Shrinking Trees." AT\&T Bell Laboratories Technical Report (March 1990). \url{http://www-stat.stanford.edu/~hastie/Papers/shrinktree.ps}
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{shrink.gbm.pred}{shrink.gbm.pred}}, \code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+
+\HeaderA{pretty.gbm.tree}{Print gbm tree components}{pretty.gbm.tree}
+\keyword{print}{pretty.gbm.tree}
+\begin{Description}\relax
+\code{gbm} stores the collection of trees used to construct the model in a 
+compact matrix structure. This function extracts the information from a single
+tree and displays it in a slightly more readable form. This function is mostly
+for debugging purposes and to satisfy some users' curiosity.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+pretty.gbm.tree(object, 
+                i.tree = 1)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] a \code{\LinkA{gbm.object}{gbm.object}} initially fit using \code{\LinkA{gbm}{gbm}}
+\item[\code{i.tree}] the index of the tree component to extract from \code{object} 
+and display 
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+\code{pretty.gbm.tree} returns a data frame. Each row corresponds to a node in 
+the tree. Columns indicate
+\begin{ldescription}
+\item[\code{SplitVar}] index of which variable is used to split. -1 indicates a 
+terminal node.
+\item[\code{SplitCodePred}] if the split variable is continuous then this component
+is the split point. If the split variable is categorical then this component
+contains the index of \code{object\$c.split} that describes the categorical
+split. If the node is a terminal node then this is the prediction.
+\item[\code{LeftNode}] the index of the row corresponding to the left node.
+\item[\code{RightNode}] the index of the row corresponding to the right node.
+\item[\code{ErrorReduction}] the reduction in the loss function as a result of 
+splitting this node.
+\item[\code{Weight}] the total weight of observations in the node. If weights are all
+equal to 1 then this is the number of observations in the node.
+\end{ldescription}
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}, \code{\LinkA{gbm.object}{gbm.object}}
+\end{SeeAlso}
+
+\HeaderA{shrink.gbm.pred}{Predictions from a shrunked GBM}{shrink.gbm.pred}
+\keyword{methods}{shrink.gbm.pred}
+\begin{Description}\relax
+Makes predictions from a shrunken GBM model.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+shrink.gbm.pred(object, 
+                newdata, 
+                n.trees, 
+                lambda = rep(1, length(object$var.names)), 
+                ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] a \code{\LinkA{gbm.object}{gbm.object}} 
+\item[\code{newdata}] dataset for predictions 
+\item[\code{n.trees}] the number of trees to use 
+\item[\code{lambda}] a vector with length equal to the number of variables containing the shrinkage parameter for each variable 
+\item[\code{...}] other parameters (ignored) 
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+A vector with length equal to the number of observations in newdata containing the predictions
+\end{Value}
+\begin{Section}{Warning}
+This function is experimental
+\end{Section}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{SeeAlso}\relax
+\code{\LinkA{shrink.gbm}{shrink.gbm}}, \code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+
+\HeaderA{predict.gbm}{Predict method for GBM Model Fits}{predict.gbm}
+\keyword{models}{predict.gbm}
+\keyword{regression}{predict.gbm}
+\begin{Description}\relax
+Predicted values based on a generalized boosted model object
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+## S3 method for class 'gbm':
+predict(object,
+        newdata,
+        n.trees,
+        type="link",
+        single.tree=FALSE,
+        ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] Object of class inheriting from (\code{\LinkA{gbm.object}{gbm.object}}) 
+\item[\code{newdata}] Data frame of observations for which to make predictions 
+\item[\code{n.trees}] Number of trees used in the prediction. \code{n.trees} may
+be a vector in which case predictions are returned for each
+iteration specified
+\item[\code{type}] The scale on which gbm makes the predictions 
+\item[\code{single.tree}] If \code{single.tree=TRUE} then \code{predict.gbm} returns
+only the predictions from tree(s) \code{n.trees}
+\item[\code{...}] further arguments passed to or from other methods 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+\code{predict.gbm} produces predicted values for each observation in \code{newdata} using the the first \code{n.trees} iterations of the boosting sequence. If \code{n.trees} is a vector than the result is a matrix with each column representing the predictions from gbm models with \code{n.trees[1]} iterations, \code{n.trees[2]} iterations, and so on.
+
+The predictions from \code{gbm} do not include the offset term. The user may add the value of the offset to the predicted value if desired.
+
+If \code{object} was fit using \code{\LinkA{gbm.fit}{gbm.fit}} there will be no
+\code{Terms} component. Therefore, the user has greater responsibility to make
+sure that \code{newdata} is of the same format (order and number of variables)
+as the one originally used to fit the model.
+\end{Details}
+\begin{Value}
+Returns a vector of predictions. By default the predictions are on the scale of f(x). For example, for the Bernoulli loss the returned value is on the log odds scale, poisson loss on the log scale, and coxph is on the log hazard scale.
+
+If \code{type="response"} then \code{gbm} converts back to the same scale as the outcome. Currently the only effect this will have is returning probabilities for bernoulli and expected counts for poisson. For the other distributions "response" and "link" return the same.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}, \code{\LinkA{gbm.object}{gbm.object}}
+\end{SeeAlso}
+
+\HeaderA{gbm}{Generalized Boosted Regression Modeling}{gbm}
+\methaliasA{gbm.fit}{gbm}{gbm.fit}
+\methaliasA{gbm.more}{gbm}{gbm.more}
+\keyword{models}{gbm}
+\keyword{nonlinear}{gbm}
+\keyword{survival}{gbm}
+\keyword{nonparametric}{gbm}
+\keyword{tree}{gbm}
+\begin{Description}\relax
+Fits generalized boosted regression models.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+gbm(formula = formula(data),
+    distribution = "bernoulli",
+    data = list(),
+    weights,
+    var.monotone = NULL,
+    n.trees = 100,
+    interaction.depth = 1,
+    n.minobsinnode = 10,
+    shrinkage = 0.001,
+    bag.fraction = 0.5,
+    train.fraction = 1.0,
+    cv.folds=0,
+    keep.data = TRUE,
+    verbose = TRUE,
+    class.stratify.cv)
+
+gbm.fit(x,y,
+        offset = NULL,
+        misc = NULL,
+        distribution = "bernoulli",
+        w = NULL,
+        var.monotone = NULL,
+        n.trees = 100,
+        interaction.depth = 1,
+        n.minobsinnode = 10,
+        shrinkage = 0.001,
+        bag.fraction = 0.5,
+        train.fraction = 1.0,
+        keep.data = TRUE,
+        verbose = TRUE,
+        var.names = NULL,
+        response.name = NULL)
+
+gbm.more(object,
+         n.new.trees = 100,
+         data = NULL,
+         weights = NULL,
+         offset = NULL,
+         verbose = NULL)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{formula}] a symbolic description of the model to be fit. The formula may 
+include an offset term (e.g. y~offset(n)+x). If \code{keep.data=FALSE} in 
+the initial call to \code{gbm} then it is the user's responsibility to 
+resupply the offset to \code{\LinkA{gbm.more}{gbm.more}}.
+\item[\code{distribution}] a character string specifying the name of the distribution 
+to use or a list with a component \code{name} specifying the distribution 
+and any additional parameters needed. If not specified, \code{gbm} will
+try to guess: if the response has only 2 unique values, bernoulli is
+assumed; otherwise, if the response is a factor, kclass is assumed; otherwise,
+if the response has class "Surv", coxph is assumed; otherwise, bisquare
+is assumed.
+
+Currently available options are "gaussian" (squared error), "laplace"
+(absolute loss), "bisquare" (bisquare loss), "tdist" (t-distribution loss),
+"bernoulli" (logistic regression for 0-1 outcomes), 
+"kclass" (classification when there are more than 2 classes),
+"adaboost" (the AdaBoost exponential loss for 0-1 outcomes), "poisson" 
+(count outcomes), "coxph" (right censored observations) or "quantile".
+
+If quantile regression is specifie, \code{distribution} must a list of the form 
+\code{list(name="quantile",alpha=0.25)} where \code{alpha} is the quantile 
+to estimate. The current version's  quantile regression method does
+not handle non-constant weights and will stop.
+
+If "bisquare" is specified, the method defaults to being
+85\% efficient for normally distributed data, and this can be controlled
+by setting distribution to be a list with 2 elements, the first of which
+should be \code{name="bisquare"}, the second of which should be
+\code{eff=c}, where
+\code{c} is a value between 0.8 and 0.95 representing the method's
+efficience when the data are normally distributed.
+
+If "tdist" is specified,
+the default
+degrees of freedom is 4 and this can be controlled by specifying
+\code{distribution=list( name="tdist", df=DF)} where \code{DF} is your chosen degrees of freedom.
+
+\item[\code{data}] an optional data frame containing the variables in the model. By
+default the variables are taken from \code{environment(formula)}, typically 
+the environment from which \code{gbm} is called. If \code{keep.data=TRUE} in 
+the initial call to \code{gbm} then \code{gbm} stores a copy with the 
+object. If \code{keep.data=FALSE} then subsequent calls to 
+\code{\LinkA{gbm.more}{gbm.more}} must resupply the same dataset. It becomes the user's 
+responsibility to resupply the same data at this point.
+\item[\code{weights}] an optional vector of weights to be used in the fitting process. 
+Must be positive but do not need to be normalized. If \code{keep.data=FALSE} 
+in the initial call to \code{gbm} then it is the user's responsibility to 
+resupply the weights to \code{\LinkA{gbm.more}{gbm.more}}.
+\item[\code{var.monotone}] an optional vector, the same length as the number of
+predictors, indicating which variables have a monotone increasing (+1),
+decreasing (-1), or arbitrary (0) relationship with the outcome.
+\item[\code{n.trees}] the total number of trees to fit. This is equivalent to the
+number of iterations and the number of basis functions in the additive
+expansion.
+\item[\code{cv.folds}] Number of cross-validation folds to perform. If \code{cv.folds}>1 then
+\code{gbm}, in addition to the usual fit, will perform a cross-validation, calculate
+an estimate of generalization error returned in \code{cv.error}.
+\item[\code{interaction.depth}] The maximum depth of variable interactions. 1 implies
+an additive model, 2 implies a model with up to 2-way interactions, etc.
+\item[\code{n.minobsinnode}] minimum number of observations in the trees terminal
+nodes. Note that this is the actual number of observations not the total
+weight.
+\item[\code{shrinkage}] a shrinkage parameter applied to each tree in the expansion.
+Also known as the learning rate or step-size reduction.
+\item[\code{bag.fraction}] the fraction of the training set observations randomly
+selected to propose the next tree in the expansion. This introduces randomnesses
+into the model fit. If \code{bag.fraction}<1 then running the same model twice
+will result in similar but different fits. \code{gbm} uses the R random number
+generator so \code{set.seed} can ensure that the model can be
+reconstructed. Preferably, the user can save the returned
+\code{\LinkA{gbm.object}{gbm.object}} using \code{\LinkA{save}{save}}.
+\item[\code{train.fraction}] The first \code{train.fraction * nrows(data)}
+observations are used to fit the \code{gbm} and the remainder are used for
+computing out-of-sample estimates of the loss function.
+\item[\code{keep.data}] a logical variable indicating whether to keep the data and
+an index of the data stored with the object. Keeping the data and index makes
+subsequent calls to \code{\LinkA{gbm.more}{gbm.more}} faster at the cost of storing an
+extra copy of the dataset.
+\item[\code{object}] a \code{gbm} object created from an initial call to
+\code{\LinkA{gbm}{gbm}}.
+\item[\code{n.new.trees}] the number of additional trees to add to \code{object}.
+\item[\code{verbose}] If TRUE, gbm will print out progress and performance indicators.
+If this option is left unspecified for gbm.more then it uses \code{verbose} from
+\code{object}.
+\item[\code{class.stratify.cv}] whether or not the cross-validation should be stratified by
+class. Defaults to \code{TRUE} for \code{distribution="kclass"} and is only 
+implementated for \code{kclass} and \code{bernoulli}. The purpose of stratifying
+the cross-validation is to help avoiding situations in which training sets do
+not contain all classes.
+\item[\code{x, y}] For \code{gbm.fit}: \code{x} is a data frame or data matrix containing the
+predictor variables and \code{y} is the vector of outcomes. The number of rows
+in \code{x} must be the same as the length of \code{y}.
+\item[\code{offset}] a vector of values for the offset
+\item[\code{misc}] For \code{gbm.fit}: \code{misc} is an R object that is simply passed on to
+the gbm engine. It can be used for additional data for the specific distribution.
+Currently it is only used for passing the censoring indicator for the Cox
+proportional hazards model.
+\item[\code{w}] For \code{gbm.fit}: \code{w} is a vector of weights of the same
+length as the \code{y}.
+\item[\code{var.names}] For \code{gbm.fit}: A vector of strings of length equal to the
+number of columns of \code{x} containing the names of the predictor variables.
+\item[\code{response.name}] For \code{gbm.fit}: A character string label for the response
+variable.
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+See \code{vignette("gbm")} for technical details of the package. Also available 
+at \url{../doc/gbm.pdf} (if you are using HTML help).
+
+This package implements the generalized boosted modeling framework.
+Boosting is the process of iteratively adding basis functions in a greedy
+fashion so that each additional basis function further reduces the selected
+loss function. This implementation closely follows Friedman's Gradient
+Boosting Machine (Friedman, 2001).
+
+In addition to many of the features documented in the Gradient Boosting Machine,
+\code{gbm} offers additional features including the out-of-bag estimator for
+the optimal number of iterations, the ability to store and manipulate the
+resulting \code{gbm} object, and a variety of other loss functions that had not
+previously had associated boosting algorithms, including the Cox partial
+likelihood for censored data, the poisson likelihood for count outcomes, and a
+gradient boosting implementation to minimize the AdaBoost exponential loss
+function.
+
+\code{gbm.fit} provides the link between R and the C++ gbm engine. \code{gbm}
+is a front-end to \code{gbm.fit} that uses the familiar R modeling formulas.
+However, \code{\LinkA{model.frame}{model.frame}} is very slow if there are many
+predictor variables. For power-users with many variables use \code{gbm.fit}.
+For general practice \code{gbm} is preferable.
+\end{Details}
+\begin{Value}
+\code{gbm}, \code{gbm.fit}, and \code{gbm.more} return a
+\code{\LinkA{gbm.object}{gbm.object}}.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+
+Quantile regression code developed by Brian Kriegler \email{bk@stat.ucla.edu}
+\end{Author}
+\begin{References}\relax
+Y. Freund and R.E. Schapire (1997) \dQuote{A decision-theoretic generalization of
+on-line learning and an application to boosting,} \emph{Journal of Computer and
+System Sciences,} 55(1):119-139.
+
+G. Ridgeway (1999). \dQuote{The state of boosting,} \emph{Computing Science and
+Statistics} 31:172-181.
+
+J.H. Friedman, T. Hastie, R. Tibshirani (2000). \dQuote{Additive Logistic Regression:
+a Statistical View of Boosting,} \emph{Annals of Statistics} 28(2):337-374.
+
+J.H. Friedman (2001). \dQuote{Greedy Function Approximation: A Gradient Boosting
+Machine,} \emph{Annals of Statistics} 29(5):1189-1232.
+
+J.H. Friedman (2002). \dQuote{Stochastic Gradient Boosting,} \emph{Computational Statistics
+and Data Analysis} 38(4):367-378.
+
+B. Kriegler (2007). \emph{Cost-Sensitive Stochastic Gradient Boosting Within a 
+Quantitative Regression Framework}. PhD dissertation, UCLA Statistics. 
+\url{http://theses.stat.ucla.edu/57/KrieglerDissertation.pdf}
+
+\url{http://www.i-pensieri.com/gregr/gbm.shtml}
+
+\url{http://www-stat.stanford.edu/~jhf/R-MART.html}
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm.object}{gbm.object}},
+\code{\LinkA{gbm.perf}{gbm.perf}},
+\code{\LinkA{plot.gbm}{plot.gbm}},
+\code{\LinkA{predict.gbm}{predict.gbm}},
+\code{\LinkA{summary.gbm}{summary.gbm}},
+\code{\LinkA{pretty.gbm.tree}{pretty.gbm.tree}}.
+\end{SeeAlso}
+\begin{Examples}
+\begin{ExampleCode}
+# A least squares regression example
+# create some data
+
+N <- 1000
+X1 <- runif(N)
+X2 <- 2*runif(N)
+X3 <- ordered(sample(letters[1:4],N,replace=TRUE),levels=letters[4:1])
+X4 <- factor(sample(letters[1:6],N,replace=TRUE))
+X5 <- factor(sample(letters[1:3],N,replace=TRUE))
+X6 <- 3*runif(N)
+mu <- c(-1,0,1,2)[as.numeric(X3)]
+
+SNR <- 10 # signal-to-noise ratio
+Y <- X1**1.5 + 2 * (X2**.5) + mu
+sigma <- sqrt(var(Y)/SNR)
+Y <- Y + rnorm(N,0,sigma)
+
+# introduce some missing values
+X1[sample(1:N,size=500)] <- NA
+X4[sample(1:N,size=300)] <- NA
+
+data <- data.frame(Y=Y,X1=X1,X2=X2,X3=X3,X4=X4,X5=X5,X6=X6)
+
+# fit initial model
+gbm1 <- gbm(Y~X1+X2+X3+X4+X5+X6,         # formula
+    data=data,                   # dataset
+    var.monotone=c(0,0,0,0,0,0), # -1: monotone decrease,
+                                 # +1: monotone increase,
+                                 #  0: no monotone restrictions
+    distribution="gaussian",     # bernoulli, adaboost, gaussian,
+                                 # poisson, coxph, and quantile available
+    n.trees=3000,                # number of trees
+    shrinkage=0.005,             # shrinkage or learning rate,
+                                 # 0.001 to 0.1 usually work
+    interaction.depth=3,         # 1: additive model, 2: two-way interactions, etc.
+    bag.fraction = 0.5,          # subsampling fraction, 0.5 is probably best
+    train.fraction = 0.5,        # fraction of data for training,
+                                 # first train.fraction*N used for training
+    n.minobsinnode = 10,         # minimum total weight needed in each node
+    cv.folds = 5,                # do 5-fold cross-validation
+    keep.data=TRUE,              # keep a copy of the dataset with the object
+    verbose=TRUE)                # print out progress
+
+# check performance using an out-of-bag estimator
+# OOB underestimates the optimal number of iterations
+best.iter <- gbm.perf(gbm1,method="OOB")
+print(best.iter)
+
+# check performance using a 50% heldout test set
+best.iter <- gbm.perf(gbm1,method="test")
+print(best.iter)
+
+# check performance using 5-fold cross-validation
+best.iter <- gbm.perf(gbm1,method="cv")
+print(best.iter)
+
+# plot the performance
+# plot variable influence
+summary(gbm1,n.trees=1)         # based on the first tree
+summary(gbm1,n.trees=best.iter) # based on the estimated best number of trees
+
+# compactly print the first and last trees for curiosity
+print(pretty.gbm.tree(gbm1,1))
+print(pretty.gbm.tree(gbm1,gbm1$n.trees))
+
+# make some new data
+N <- 1000
+X1 <- runif(N)
+X2 <- 2*runif(N)
+X3 <- ordered(sample(letters[1:4],N,replace=TRUE))
+X4 <- factor(sample(letters[1:6],N,replace=TRUE))
+X5 <- factor(sample(letters[1:3],N,replace=TRUE))
+X6 <- 3*runif(N)
+mu <- c(-1,0,1,2)[as.numeric(X3)]
+
+Y <- X1**1.5 + 2 * (X2**.5) + mu + rnorm(N,0,sigma)
+
+data2 <- data.frame(Y=Y,X1=X1,X2=X2,X3=X3,X4=X4,X5=X5,X6=X6)
+
+# predict on the new data using "best" number of trees
+# f.predict generally will be on the canonical scale (logit,log,etc.)
+f.predict <- predict.gbm(gbm1,data2,best.iter)
+
+# least squares error
+print(sum((data2$Y-f.predict)^2))
+
+# create marginal plots
+# plot variable X1,X2,X3 after "best" iterations
+par(mfrow=c(1,3))
+plot.gbm(gbm1,1,best.iter)
+plot.gbm(gbm1,2,best.iter)
+plot.gbm(gbm1,3,best.iter)
+par(mfrow=c(1,1))
+# contour plot of variables 1 and 2 after "best" iterations
+plot.gbm(gbm1,1:2,best.iter)
+# lattice plot of variables 2 and 3
+plot.gbm(gbm1,2:3,best.iter)
+# lattice plot of variables 3 and 4
+plot.gbm(gbm1,3:4,best.iter)
+
+# 3-way plots
+plot.gbm(gbm1,c(1,2,6),best.iter,cont=20)
+plot.gbm(gbm1,1:3,best.iter)
+plot.gbm(gbm1,2:4,best.iter)
+plot.gbm(gbm1,3:5,best.iter)
+
+# do another 100 iterations
+gbm2 <- gbm.more(gbm1,100,
+                 verbose=FALSE) # stop printing detailed progress
+\end{ExampleCode}
+\end{Examples}
+
+\end{document}

@@ -1,0 +1,72 @@
+predict.gbm               package:gbm               R Documentation
+
+_P_r_e_d_i_c_t _m_e_t_h_o_d _f_o_r _G_B_M _M_o_d_e_l _F_i_t_s
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     Predicted values based on a generalized boosted model object
+
+_U_s_a_g_e:
+
+     ## S3 method for class 'gbm':
+     predict(object,
+             newdata,
+             n.trees,
+             type="link",
+             single.tree=FALSE,
+             ...)
+
+_A_r_g_u_m_e_n_t_s:
+
+  object: Object of class inheriting from ('gbm.object') 
+
+ newdata: Data frame of observations for which to make predictions 
+
+ n.trees: Number of trees used in the prediction. 'n.trees' may be a
+          vector in which case predictions are returned for each
+          iteration specified
+
+    type: The scale on which gbm makes the predictions 
+
+single.tree: If 'single.tree=TRUE' then 'predict.gbm' returns only the
+          predictions from tree(s) 'n.trees'
+
+     ...: further arguments passed to or from other methods 
+
+_D_e_t_a_i_l_s:
+
+     'predict.gbm' produces predicted values for each observation in
+     'newdata' using the the first 'n.trees' iterations of the boosting
+     sequence. If 'n.trees' is a vector than the result is a matrix
+     with each column representing the predictions from gbm models with
+     'n.trees[1]' iterations, 'n.trees[2]' iterations, and so on.
+
+     The predictions from 'gbm' do not include the offset term. The
+     user may add the value of the offset to the predicted value if
+     desired.
+
+     If 'object' was fit using 'gbm.fit' there will be no 'Terms'
+     component. Therefore, the user has greater responsibility to make
+     sure that 'newdata' is of the same format (order and number of
+     variables) as the one originally used to fit the model.
+
+_V_a_l_u_e:
+
+     Returns a vector of predictions. By default the predictions are on
+     the scale of f(x). For example, for the Bernoulli loss the
+     returned value is on the log odds scale, poisson loss on the log
+     scale, and coxph is on the log hazard scale.
+
+     If 'type="response"' then 'gbm' converts back to the same scale as
+     the outcome. Currently the only effect this will have is returning
+     probabilities for bernoulli and expected counts for poisson. For
+     the other distributions "response" and "link" return the same.
+
+_A_u_t_h_o_r(_s):
+
+     Greg Ridgeway gregr@rand.org
+
+_S_e_e _A_l_s_o:
+
+     'gbm', 'gbm.object'
+

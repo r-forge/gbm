@@ -1,0 +1,36 @@
+\HeaderA{shrink.gbm.pred}{Predictions from a shrunked GBM}{shrink.gbm.pred}
+\keyword{methods}{shrink.gbm.pred}
+\begin{Description}\relax
+Makes predictions from a shrunken GBM model.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+shrink.gbm.pred(object, 
+                newdata, 
+                n.trees, 
+                lambda = rep(1, length(object$var.names)), 
+                ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] a \code{\LinkA{gbm.object}{gbm.object}} 
+\item[\code{newdata}] dataset for predictions 
+\item[\code{n.trees}] the number of trees to use 
+\item[\code{lambda}] a vector with length equal to the number of variables containing the shrinkage parameter for each variable 
+\item[\code{...}] other parameters (ignored) 
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+A vector with length equal to the number of observations in newdata containing the predictions
+\end{Value}
+\begin{Section}{Warning}
+This function is experimental
+\end{Section}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{SeeAlso}\relax
+\code{\LinkA{shrink.gbm}{shrink.gbm}}, \code{\LinkA{gbm}{gbm}}
+\end{SeeAlso}
+

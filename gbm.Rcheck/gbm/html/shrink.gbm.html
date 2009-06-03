@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: L1 shrinkage of the predictor variables in a GBM</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for shrink.gbm {gbm}"><tr><td>shrink.gbm {gbm}</td><td align="right">R Documentation</td></tr></table>
+<h2>L1 shrinkage of the predictor variables in a GBM</h2>
+
+
+<h3>Description</h3>
+
+<p>
+Performs recursive shrinkage in each of the trees in a GBM fit using different shrinkage parameters for each variable.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+shrink.gbm(object, 
+           n.trees, 
+           lambda = rep(10, length(object$var.names)), 
+           ...)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>object</code></td>
+<td>
+A <code><a href="gbm.object.html">gbm.object</a></code> </td></tr>
+<tr valign="top"><td><code>n.trees</code></td>
+<td>
+the number of trees to use </td></tr>
+<tr valign="top"><td><code>lambda</code></td>
+<td>
+a vector with length equal to the number of variables containing the shrinkage parameter for each variable </td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+other parameters (ignored) </td></tr>
+</table>
+
+<h3>Details</h3>
+
+<p>
+This function is currently experimental. Used in conjunction with a gradient ascent search for inclusion of variables.
+</p>
+
+
+<h3>Value</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>predF</code></td>
+<td>
+Predicted values from the shrunken tree</td></tr>
+<tr valign="top"><td><code>objective</code></td>
+<td>
+The value of the loss function associated with the predicted values</td></tr>
+<tr valign="top"><td><code>gradient</code></td>
+<td>
+A vector with length equal to the number of variables containing the derivative of the objective function with respect to beta, the logit transform of the shrinkage parameter for each variable</td></tr>
+</table>
+
+<h3>Warning</h3>
+
+<p>
+This function is experimental.
+</p>
+
+
+<h3>Author(s)</h3>
+
+<p>
+Greg Ridgeway <a href="mailto:gregr@rand.org">gregr@rand.org</a>
+</p>
+
+
+<h3>References</h3>
+
+<p>
+Hastie, T. J., and Pregibon, D. "Shrinking Trees." AT&amp;T Bell Laboratories Technical Report (March 1990). <a href="http://www-stat.stanford.edu/~hastie/Papers/shrinktree.ps">http://www-stat.stanford.edu/~hastie/Papers/shrinktree.ps</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>
+<code><a href="shrink.gbm.pred.html">shrink.gbm.pred</a></code>, <code><a href="gbm.html">gbm</a></code>
+</p>
+
+
+
+<hr><div align="center">[Package <em>gbm</em> version 1.7-1 <a href="00Index.html">Index]</a></div>
+
+</body></html>

@@ -1,0 +1,41 @@
+\HeaderA{quantile.rug}{Quantile rug plot}{quantile.rug}
+\keyword{aplot}{quantile.rug}
+\begin{Description}\relax
+Marks the quantiles on the axes of the current plot.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+quantile.rug(x,prob=(0:10)/10,...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] a numeric vector.
+\item[\code{prob}] the quantiles of x to mark on the x-axis.
+\item[\code{...}] additional graphics parameters currently ignored.
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+No return values
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+\url{http://www.i-pensieri.com/gregr/gbm.shtml}
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{plot}{plot}}, 
+\code{\LinkA{quantile}{quantile}}, 
+\code{\LinkA{jitter}{jitter}}, 
+\code{\LinkA{rug}{rug}}.
+\end{SeeAlso}
+\begin{Examples}
+\begin{ExampleCode}
+x <- rnorm(100)
+y <- rnorm(100)
+plot(x,y)
+quantile.rug(x)
+\end{ExampleCode}
+\end{Examples}
+

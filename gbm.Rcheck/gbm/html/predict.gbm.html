@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: Predict method for GBM Model Fits</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for predict.gbm {gbm}"><tr><td>predict.gbm {gbm}</td><td align="right">R Documentation</td></tr></table>
+<h2>Predict method for GBM Model Fits</h2>
+
+
+<h3>Description</h3>
+
+<p>
+Predicted values based on a generalized boosted model object
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>
+## S3 method for class 'gbm':
+predict(object,
+        newdata,
+        n.trees,
+        type="link",
+        single.tree=FALSE,
+        ...)
+</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>object</code></td>
+<td>
+Object of class inheriting from (<code><a href="gbm.object.html">gbm.object</a></code>) </td></tr>
+<tr valign="top"><td><code>newdata</code></td>
+<td>
+Data frame of observations for which to make predictions </td></tr>
+<tr valign="top"><td><code>n.trees</code></td>
+<td>
+Number of trees used in the prediction. <code>n.trees</code> may
+be a vector in which case predictions are returned for each
+iteration specified</td></tr>
+<tr valign="top"><td><code>type</code></td>
+<td>
+The scale on which gbm makes the predictions </td></tr>
+<tr valign="top"><td><code>single.tree</code></td>
+<td>
+If <code>single.tree=TRUE</code> then <code>predict.gbm</code> returns
+only the predictions from tree(s) <code>n.trees</code></td></tr>
+<tr valign="top"><td><code>...</code></td>
+<td>
+further arguments passed to or from other methods </td></tr>
+</table>
+
+<h3>Details</h3>
+
+<p>
+<code>predict.gbm</code> produces predicted values for each observation in <code>newdata</code> using the the first <code>n.trees</code> iterations of the boosting sequence. If <code>n.trees</code> is a vector than the result is a matrix with each column representing the predictions from gbm models with <code>n.trees[1]</code> iterations, <code>n.trees[2]</code> iterations, and so on.
+</p>
+<p>
+The predictions from <code>gbm</code> do not include the offset term. The user may add the value of the offset to the predicted value if desired.
+</p>
+<p>
+If <code>object</code> was fit using <code><a href="gbm.html">gbm.fit</a></code> there will be no
+<code>Terms</code> component. Therefore, the user has greater responsibility to make
+sure that <code>newdata</code> is of the same format (order and number of variables)
+as the one originally used to fit the model.
+</p>
+
+
+<h3>Value</h3>
+
+<p>
+Returns a vector of predictions. By default the predictions are on the scale of f(x). For example, for the Bernoulli loss the returned value is on the log odds scale, poisson loss on the log scale, and coxph is on the log hazard scale.
+<br>
+If <code>type="response"</code> then <code>gbm</code> converts back to the same scale as the outcome. Currently the only effect this will have is returning probabilities for bernoulli and expected counts for poisson. For the other distributions "response" and "link" return the same.</p>
+
+<h3>Author(s)</h3>
+
+<p>
+Greg Ridgeway <a href="mailto:gregr@rand.org">gregr@rand.org</a>
+</p>
+
+
+<h3>See Also</h3>
+
+<p>
+<code><a href="gbm.html">gbm</a></code>, <code><a href="gbm.object.html">gbm.object</a></code>
+</p>
+
+
+
+<hr><div align="center">[Package <em>gbm</em> version 1.7-1 <a href="00Index.html">Index]</a></div>
+
+</body></html>

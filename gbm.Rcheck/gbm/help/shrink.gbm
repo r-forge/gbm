@@ -1,0 +1,62 @@
+shrink.gbm                package:gbm                R Documentation
+
+_L_1 _s_h_r_i_n_k_a_g_e _o_f _t_h_e _p_r_e_d_i_c_t_o_r _v_a_r_i_a_b_l_e_s _i_n _a _G_B_M
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     Performs recursive shrinkage in each of the trees in a GBM fit
+     using different shrinkage parameters for each variable.
+
+_U_s_a_g_e:
+
+     shrink.gbm(object, 
+                n.trees, 
+                lambda = rep(10, length(object$var.names)), 
+                ...)
+
+_A_r_g_u_m_e_n_t_s:
+
+  object: A 'gbm.object' 
+
+ n.trees: the number of trees to use 
+
+  lambda: a vector with length equal to the number of variables
+          containing the shrinkage parameter for each variable 
+
+     ...: other parameters (ignored) 
+
+_D_e_t_a_i_l_s:
+
+     This function is currently experimental. Used in conjunction with
+     a gradient ascent search for inclusion of variables.
+
+_V_a_l_u_e:
+
+   predF: Predicted values from the shrunken tree
+
+objective: The value of the loss function associated with the predicted
+          values
+
+gradient: A vector with length equal to the number of variables
+          containing the derivative of the objective function with
+          respect to beta, the logit transform of the shrinkage
+          parameter for each variable
+
+_W_a_r_n_i_n_g:
+
+     This function is experimental.
+
+_A_u_t_h_o_r(_s):
+
+     Greg Ridgeway gregr@rand.org
+
+_R_e_f_e_r_e_n_c_e_s:
+
+     Hastie, T. J., and Pregibon, D. "Shrinking Trees." AT&T Bell
+     Laboratories Technical Report (March 1990). <URL:
+     http://www-stat.stanford.edu/~hastie/Papers/shrinktree.ps>
+
+_S_e_e _A_l_s_o:
+
+     'shrink.gbm.pred', 'gbm'
+
