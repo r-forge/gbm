@@ -1,0 +1,43 @@
+quantile.rug               package:gbm               R Documentation
+
+_Q_u_a_n_t_i_l_e _r_u_g _p_l_o_t
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     Marks the quantiles on the axes of the current plot.
+
+_U_s_a_g_e:
+
+     quantile.rug(x,prob=(0:10)/10,...)
+
+_A_r_g_u_m_e_n_t_s:
+
+       x: a numeric vector.
+
+    prob: the quantiles of x to mark on the x-axis.
+
+     ...: additional graphics parameters currently ignored.
+
+_V_a_l_u_e:
+
+     No return values
+
+_A_u_t_h_o_r(_s):
+
+     Greg Ridgeway gregr@rand.org
+
+_R_e_f_e_r_e_n_c_e_s:
+
+     <URL: http://www.i-pensieri.com/gregr/gbm.shtml>
+
+_S_e_e _A_l_s_o:
+
+     'plot',  'quantile',  'jitter',  'rug'.
+
+_E_x_a_m_p_l_e_s:
+
+     x <- rnorm(100)
+     y <- rnorm(100)
+     plot(x,y)
+     quantile.rug(x)
+

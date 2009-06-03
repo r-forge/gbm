@@ -1,0 +1,75 @@
+gbm-package               package:gbm               R Documentation
+
+_G_e_n_e_r_a_l_i_z_e_d _B_o_o_s_t_e_d _R_e_g_r_e_s_s_i_o_n _M_o_d_e_l_s
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     This package implements extensions to Freund and Schapire's
+     AdaBoost algorithm and J. Friedman's gradient boosting machine.
+     Includes regression methods for least squares, absolute loss,
+     logistic, Poisson, Cox proportional hazards partial likelihood,
+     and AdaBoost exponential loss.
+
+_D_e_t_a_i_l_s:
+
+
+       Package:  gbm
+       Version:  1.5-6
+       Date:     2006-1-20
+       Depends:  R (>= 2.1.0), survival, lattice, mgcv
+       License:  GPL (version 2 or newer)
+       URL:      http://www.i-pensieri.com/gregr/gbm.shtml
+       Built:    R 2.2.1; i386-pc-mingw32; 2006-02-24 18:09:42; windows
+
+     Index:
+
+
+     basehaz.gbm             Baseline hazard function
+     calibrate.plot          Calibration plot
+     gbm                     Generalized Boosted Regression Modeling
+     gbm.object              Generalized Boosted Regression Model
+     Object
+     gbm.perf                GBM performance
+     plot.gbm                Marginal plots of fitted gbm objects
+     predict.gbm             Predict method for GBM Model Fits
+     pretty.gbm.tree         Print gbm tree components
+     quantile.rug            Quantile rug plot
+     relative.influence      Methods for estimating relative influence
+     shrink.gbm              L1 shrinkage of the predictor variables in
+     a
+                             GBM
+     shrink.gbm.pred         Predictions from a shrunked GBM
+     summary.gbm             Summary of a gbm object
+
+     Further information is available in the following vignettes:
+
+       'gbm'  Generalized Boosted Models: A guide to the gbm package (source, pdf)
+
+_A_u_t_h_o_r(_s):
+
+     Greg Ridgeway gregr@rand.org
+
+_R_e_f_e_r_e_n_c_e_s:
+
+     Y. Freund and R.E. Schapire (1997) "A decision-theoretic
+     generalization of on-line learning and an application to
+     boosting," _Journal of Computer and System Sciences,_
+     55(1):119-139.
+
+     G. Ridgeway (1999). "The state of boosting," _Computing Science
+     and Statistics_ 31:172-181.
+
+     J.H. Friedman, T. Hastie, R. Tibshirani (2000). "Additive Logistic
+     Regression: a Statistical View of Boosting," _Annals of
+     Statistics_ 28(2):337-374.
+
+     J.H. Friedman (2001). "Greedy Function Approximation: A Gradient
+     Boosting Machine," _Annals of Statistics_ 29(5):1189-1232.
+
+     J.H. Friedman (2002). "Stochastic Gradient Boosting,"
+     _Computational Statistics and Data Analysis_ 38(4):367-378.
+
+     <URL: http://www.i-pensieri.com/gregr/gbm.shtml>
+
+     <URL: http://www-stat.stanford.edu/~jhf/R-MART.html>
+

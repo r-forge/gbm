@@ -1,0 +1,50 @@
+\HeaderA{interact.gbm}{Estimate the strength of interaction effects}{interact.gbm}
+\keyword{methods}{interact.gbm}
+\begin{Description}\relax
+Computes Friedman's H-statistic to assess the strength of variable interactions.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+interact.gbm(x,
+             data,
+             i.var = 1,
+             n.trees = x$n.trees)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] a \code{\LinkA{gbm.object}{gbm.object}} fitted using a call to \code{\LinkA{gbm}{gbm}}
+\item[\code{data}] the dataset used to construct \code{x}. If the original dataset is
+large, a random subsample may be used to accelerate the computation in
+\code{interact.gbm}
+\item[\code{i.var}] a vector of indices or the names of the variables for compute
+the interaction effect. If using indices, the variables are indexed in the
+same order that they appear in the initial \code{gbm} formula.
+\item[\code{n.trees}] the number of trees used to generate the plot. Only the first
+\code{n.trees} trees will be used
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+\code{interact.gbm} computes Friedman's H-statistic to assess the relative
+strength of interaction effects in non-linear models. H is on the scale of
+[0-1] with higher values indicating larger interaction effects. To connect to
+a more familiar measure, if \eqn{x_1}{} and \eqn{x_2}{} are uncorrelated covariates
+with mean 0 and variance 1 and the model is of the form
+\deqn{y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_3}{}
+then
+\deqn{H=\frac{\beta_3}{\sqrt{\beta_1^2+\beta_2^2+\beta_3^2}}}{}
+\end{Details}
+\begin{Value}
+Returns the value of \eqn{H}{}.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.H. Friedman and B.E. Popescu (2005). \dQuote{Predictive Learning via Rule
+Ensembles.} Section 8.1
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{gbm}{gbm}}, \code{\LinkA{gbm.object}{gbm.object}}
+\end{SeeAlso}
+

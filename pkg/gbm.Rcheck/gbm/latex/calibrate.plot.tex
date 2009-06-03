@@ -1,0 +1,78 @@
+\HeaderA{calibrate.plot}{Calibration plot}{calibrate.plot}
+\keyword{hplot}{calibrate.plot}
+\begin{Description}\relax
+An experimental diagnostic tool that plots the fitted values versus the actual average values.
+Currently developed for only \code{distribution="bernoulli"}.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+calibrate.plot(y,p,
+               distribution="bernoulli",
+               replace=TRUE,
+               line.par=list(col="black"),
+               shade.col="lightyellow",
+               shade.density=NULL,
+               rug.par=list(side=1),
+               xlab="Predicted value",
+               ylab="Observed average",
+               xlim=NULL,ylim=NULL,
+               knots=NULL,df=6,
+               ...)
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{y}] the outcome 0-1 variable 
+\item[\code{p}] the predictions estimating E(y|x) 
+\item[\code{distribution}] the loss function used in creating \code{p}.
+\code{bernoulli} and \code{poisson} are currently the
+only special options. All others default to squared error
+assuming \code{gaussian}
+\item[\code{replace}] determines whether this plot will replace or overlay the current plot.
+\code{replace=FALSE} is useful for comparing the calibration of several
+methods
+\item[\code{line.par}] graphics parameters for the line 
+\item[\code{shade.col}] color for shading the 2 SE region. \code{shade.col=NA} implies no 2 SE
+region
+\item[\code{shade.density}] the \code{density} parameter for \code{\LinkA{polygon}{polygon}}
+\item[\code{rug.par}] graphics parameters passed to \code{\LinkA{rug}{rug}}
+\item[\code{xlab}] x-axis label corresponding to the predicted values
+\item[\code{ylab}] y-axis label corresponding to the observed average
+\item[\code{xlim,ylim}] x and y-axis limits. If not specified te function will select
+limits
+\item[\code{knots,df}] these parameters are passed directly to 
+\code{\LinkA{ns}{ns}} for constructing a natural spline 
+smoother for the calibration curve
+\item[\code{...}] other graphics parameters passed on to the plot function 
+\end{ldescription}
+\end{Arguments}
+\begin{Details}\relax
+Uses natural splines to estimate E(y|p). Well-calibrated predictions
+imply that E(y|p) = p. The plot also includes a pointwise 95
+band.
+\end{Details}
+\begin{Value}
+\code{calibrate.plot} returns no values.
+\end{Value}
+\begin{Author}\relax
+Greg Ridgeway \email{gregr@rand.org}
+\end{Author}
+\begin{References}\relax
+J.F. Yates (1982). "External correspondence: decomposition of the mean
+probability score," Organisational Behaviour and Human Performance 30:132-156.
+
+D.J. Spiegelhalter (1986). "Probabilistic Prediction in Patient Management
+and Clinical Trials," Statistics in Medicine 5:421-433.
+\end{References}
+\begin{Examples}
+\begin{ExampleCode}
+library(rpart)
+data(kyphosis)
+y <- as.numeric(kyphosis$Kyphosis)-1
+x <- kyphosis$Age
+glm1 <- glm(y~poly(x,2),family=binomial)
+p <- predict(glm1,type="response")
+calibrate.plot(y, p, xlim=c(0,0.6), ylim=c(0,0.6))
+\end{ExampleCode}
+\end{Examples}
+

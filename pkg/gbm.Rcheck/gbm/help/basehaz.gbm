@@ -1,0 +1,64 @@
+basehaz.gbm               package:gbm               R Documentation
+
+_B_a_s_e_l_i_n_e _h_a_z_a_r_d _f_u_n_c_t_i_o_n
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     Computes the Breslow estimator of the baseline hazard function for
+     a proportional hazard regression model
+
+_U_s_a_g_e:
+
+     basehaz.gbm(t, delta, f.x, 
+                 t.eval = NULL, 
+                 smooth = FALSE, 
+                 cumulative = TRUE)
+
+_A_r_g_u_m_e_n_t_s:
+
+       t: the survival times 
+
+   delta: the censoring indicator 
+
+     f.x: the predicted values of the regression model on the log
+          hazard scale 
+
+  t.eval: values at which the baseline hazard will be evaluated 
+
+  smooth: if 'TRUE' 'basehaz.gbm' will smooth the estimated baseline
+          hazard using Friedman's super smoother 'supsmu'
+
+cumulative: if 'TRUE' the cumulative survival function will be computed 
+
+_D_e_t_a_i_l_s:
+
+     The proportional hazard model assumes h(t|x)=lambda(t)*exp(f(x)).
+     'gbm' can estimate the f(x) component via partial likelihood.
+     After estimating f(x), 'basehaz.gbm' can compute the a
+     nonparametric estimate of lambda(t).
+
+_V_a_l_u_e:
+
+     a vector of length equal to the length of t (or of length 't.eval'
+     if 't.eval' is not 'NULL' containing the baseline hazard evaluated
+     at t (or at 't.eval' if 't.eval' is not 'NULL'). If 'cumulative'
+     is set to 'TRUE' then the returned vector evaluates the cumulative
+     hazard function at those values.
+
+_A_u_t_h_o_r(_s):
+
+     Greg Ridgeway gregr@rand.org
+
+_R_e_f_e_r_e_n_c_e_s:
+
+     N. Breslow (1972). "Disussion of `Regression Models and
+     Life-Tables' by D.R. Cox," Journal of the Royal Statistical
+     Society, Series B, 34(2):216-217.
+
+     N. Breslow (1974). "Covariance analysis of censored survival
+     data," Biometrics 30:89-99.
+
+_S_e_e _A_l_s_o:
+
+     'survfit', 'gbm'
+
