@@ -7,12 +7,10 @@
 # Changes to gbm, April 2009, Harry Southworth:
 
 # Regression with bisquare and t-distribution loss functions
-# added. K-Class classification added. Code written by
+# added. Multinomial classification added. Code written by
 # Daniel Edwards with input from Harry Southworth.
 # R functions modified to accomodate these.
 
-# XXX .First.lib modified to avoid problem when the packages is installed in 
-# 		a local library
 # XXX relative.influence changed to give names to the returned vector
 # XXX Added print.gbm and show.gbm
 # XXX Added estBisqParam.
@@ -35,164 +33,157 @@
      require(survival)
      require(splines)
      require(lattice)
-     cat( "Loaded gbm\nThis is an experimental version: please report bugs to\n" )
-     cat( "harry.southworth at gmail dot com\n" )
+     vers <- library(help=gbm)$info[[1]]
+     vers <- vers[grep("Version:",vers)]
+     vers <- rev(strsplit(vers," ")[[1]])[1]
+     cat("Loaded gbm",vers,"\n")     
 }
 
 
-reconstructGBMdata <- 
-   # Construct a data.frame from the data element of a gbm object.
-   # This is a support fuction for other functions in the gbm package
-   # and is not intended for direct usage. This function does not
-   # attempt to reconstruct the column-order of the original data.
-function( x ){
-   if ( class( x ) != "gbm" ){
+reconstructGBMdata <- function(x)
+{
+   if(class(x) != "gbm")
+   {
       stop( "This function is for use only with objects having class 'gbm'" )
-   }
-   else if ( is.null( x$data ) ){
-      stop( "Can't reconstruct data from gbm object if keep.data = FALSE" )
-   }
-   else if ( x$distribution$name == "kclass" ){
-      y <- matrix( x$data$y, ncol=length( x$classes), byrow=FALSE )
-      yn <- apply( y , 1, function( z, nc ){
-                             (1:nc)[z == 1]
-			  }  , nc = ncol(y)
-                  )
-      y <- factor( yn, labels = x$classes )
-      xdat <- matrix( x$data$x , ncol=ncol( x$data$x.order ), byrow=FALSE )
-      d <- data.frame( y, xdat )
-      names( d ) <- c( x$response.name, x$var.names )
-   } # close else if ( x.. kclass
-   else if ( x$distribution$name == "coxph" ){
-      xdat <- matrix( x$data$x, ncol=ncol( x$data$x.order ), byrow=FALSE )
+   } else 
+   if (is.null(x$data))
+   {
+      stop("Cannot reconstruct data from gbm object. gbm() was called with keep.data=FALSE")
+   } else 
+   if (x$distribution$name=="multinomial")
+   {
+      y <- matrix(x$data$y, ncol=length(x$classes), byrow=FALSE)
+      yn <- apply(y, 1, function(z,nc) {(1:nc)[z == 1]}, 
+                  nc = ncol(y))
+      y <- factor(yn, labels=x$classes)
+      xdat <- matrix(x$data$x, ncol=ncol(x$data$x.order), byrow=FALSE)
+      d <- data.frame(y, xdat)
+      names(d) <- c(x$response.name, x$var.names)
+   } else 
+   if (x$distribution$name == "coxph")
+   {
+      xdat <- matrix(x$data$x, ncol=ncol(x$data$x.order), byrow=FALSE)
       status <- x$data$Misc
-      y <- x$data$y[ order( x$data$i.timeorder) ]
-      d <- data.frame( y, status, xdat )
-      names( d ) <- c( x$response.name[ -1 ] , colnames( x$data$x.order ) )
+      y <- x$data$y[order(x$data$i.timeorder)]
+      d <- data.frame(y, status, xdat)
+      names(d) <- c(x$response.name[-1], colnames(x$data$x.order))
    }
-   else {
+   else 
+   {
       y <- x$data$y
-      xdat <- matrix( x$data$x , ncol=ncol( x$data$x.order ), byrow=FALSE )
-      d <- data.frame( y, xdat )
-      rn <- ifelse( length( x$response.name ) > 1 , x$response.name[2], x$response.name )
-      names( d ) <- c( rn, colnames( x$data$x.order ) )
+      xdat <- matrix(x$data$x, ncol=ncol(x$data$x.order), byrow=FALSE)
+      d <- data.frame(y, xdat)
+      rn <- ifelse(length(x$response.name) > 1, x$response.name[2], x$response.name)
+      names(d) <- c(rn, colnames(x$data$x.order))
    }
-   invisible( d )
+   invisible(d)
 }
 
 
-estBisqParam <-
-  # Get an approximate value of the bisquare tuning parameter given
-  # efficiency for normal data. The constants in this function
-  # have been taken from lmRob.fit.compute in the 'robust' package.
-  # Values of efficiency between 0.8 and 0.95 are supported. Values
-  # that are not divisible by 0.05 are estimated by interpolation.
-  # The default value returned is for 0.85 effiency.
-  # Comparing 100 values of the estimated tuning parameter estimated
-  # by this function with the same estimated by S+ function 'chb'
-  # gives a correlation of 0.99983, though this function seems
-  # to slightly overestimate the parameter for values between
-  # about 4.1 and 4.6.
-function( x=NULL ){
-   	  if (is.null(x) || !is.numeric( x )){
-   	  	Misc <- 3.443689
-   	  }
-          else if ( x < .8 | x > .95 ){ 
-	    stop( "Only bisquare efficiency between 0.8 and 0.95 is currently supported"
-	    )
-	  }
-	  else { # Borrowed from lmRob.fit.compute in the robust package
-	    if ( x == .95 ){ Misc <- 4.685061 }
-	    else if ( x == .9 ){ Misc <- 3.882646 }
-	    else if ( x == .85 ){ Misc <- 3.443689 }
-	    else if ( x == .8 ){ Misc <- 3.136909 }
-	    else {
-	      s <- spline( c( .8, .85, .9, .95 ), c( 3.136909, 3.443689,
-	      3.882646, 4.685061 ), n=500)
-	      Misc <- s$y[ abs( s$x - x ) == min( abs( s$x - x ) ) ]
-	    }
-	  }
-	  Misc
+estBisqParam <- function(x=0.85)
+{
+   if (is.null(x) || !is.numeric( x ))
+   {
+      Misc <- 3.443689
+   } else 
+   if ( x < 0.80 | x > 0.95 )
+   {
+      stop("Only bisquare efficiency between 0.8 and 0.95 is currently supported")
+   } else 
+   { 
+      # Borrowed from lmRob.fit.compute in the robust package
+      if (x==0.95){ Misc <- 4.685061 }
+      else if (x==0.90){ Misc <- 3.882646 }
+      else if (x==0.85){ Misc <- 3.443689 }
+      else if (x==0.80){ Misc <- 3.136909 }
+      else 
+      {
+         s <- spline(c(0.80,0.85,0.90,0.95), 
+                     c(3.136909,3.443689,3.882646,4.685061), n=500)
+         Misc <- s$y[ abs( s$x - x ) == min( abs( s$x - x ) ) ]
+      }
+   }
+   return(Misc)
 }
 
 print.gbm <- function( x, ... ){
-	print( x$call )
-	cat( paste( "A gradient boosted model with", x$distribution$name, "loss function.\n" ))
-	cat( paste( length( x$train.error ), "iterations were performed.\n" ) )
+   print( x$call )
+   cat( paste( "A gradient boosted model with", x$distribution$name, "loss function.\n" ))
+   cat( paste( length( x$train.error ), "iterations were performed.\n" ) )
         best <- length( x$train.error )
-	if ( !is.null( x$cv.error ) ){
-		best <- gbm.perf( x, plot.it = FALSE, method="cv" )
-		cat( paste("The best cross-validation iteration was ", best, ".\n", sep = "" ) )
-	}
-	if ( x$train.fraction < 1 ) {
-		best <- gbm.perf( x, plot.it = FALSE, method="test" )
-		cat( paste("The best test-set iteration was ", best, ".\n", sep = "" ) )
-	}
-	if ( is.null( best ) ){
-		best <- length( x$train.error )
-	}
-	ri <- relative.influence( x, n.trees=best )
-	cat( "There were", length( x$var.names ), "predictors of which",
-				  sum( ri > 0 ), "had non-zero influence.\n" )
-	
+   if ( !is.null( x$cv.error ) ){
+      best <- gbm.perf( x, plot.it = FALSE, method="cv" )
+      cat( paste("The best cross-validation iteration was ", best, ".\n", sep = "" ) )
+   }
+   if ( x$train.fraction < 1 ) {
+      best <- gbm.perf( x, plot.it = FALSE, method="test" )
+      cat( paste("The best test-set iteration was ", best, ".\n", sep = "" ) )
+   }
+   if ( is.null( best ) ){
+      best <- length( x$train.error )
+   }
+   ri <- relative.influence( x, n.trees=best )
+   cat( "There were", length( x$var.names ), "predictors of which",
+              sum( ri > 0 ), "had non-zero influence.\n" )
+   
            d <- reconstructGBMdata( x )
-	   if (x$distribution$name == "kclass"){
-	      n.class <- x$num.classes
+      if (x$distribution$name == "multinomial"){
+         n.class <- x$num.classes
 
-	      yn <- as.numeric( d[, x$response.name ] )
+         yn <- as.numeric( d[, x$response.name ] )
 
               p <- predict( x, n.trees=best , type = "response", newdata=d )
               p <- apply( p, 1, function( x , labels ){ labels[ x == max( x ) ] },
-	                  labels = colnames( p )
-			)
+                     labels = colnames( p )
+         )
               p <- as.numeric(as.factor( p ))
-	      r <- yn
+         r <- yn
 
-	      conf.mat <- matrix(table(c(r + n.class * p, (n.class + (1:(n.class^2))))), 
-	                         nrow = n.class)
-	      conf.mat <- conf.mat - 1
+         conf.mat <- matrix(table(c(r + n.class * p, (n.class + (1:(n.class^2))))), 
+                            nrow = n.class)
+         conf.mat <- conf.mat - 1
 
-	      pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
+         pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
 
-	      conf.mat <- cbind(conf.mat, round(100*diag(conf.mat)/rowSums(conf.mat),2))
-	      dimnames(conf.mat) <- list(x$classes, c(x$classes, "Pred. Acc."))
+         conf.mat <- cbind(conf.mat, round(100*diag(conf.mat)/rowSums(conf.mat),2))
+         dimnames(conf.mat) <- list(x$classes, c(x$classes, "Pred. Acc."))
 
-	      cat("\nConfusion matrix:\n")
-	      print(conf.mat)
+         cat("\nConfusion matrix:\n")
+         print(conf.mat)
 
-	      cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
-	   }
-	   else if (x$distribution$name == "bernoulli" || x$distribution$name == "adaboost"){
+         cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
+      }
+      else if (x$distribution$name == "bernoulli" || x$distribution$name == "adaboost"){
 
-	      p <- predict( x , newdata=d, n.tree=best , type = "response")
-	      p <- ifelse( p < .5, 0, 1 )
-	      
-	      conf.mat <- matrix( table( c( d[,x$response.name] + 2 * p , 0:3 )), ncol=2 )
-	      conf.mat <- conf.mat - 1
+         p <- predict( x , newdata=d, n.tree=best , type = "response")
+         p <- ifelse( p < .5, 0, 1 )
+         
+         conf.mat <- matrix( table( c( d[,x$response.name] + 2 * p , 0:3 )), ncol=2 )
+         conf.mat <- conf.mat - 1
 
-	      pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
+         pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
 
-	      conf.mat <- cbind(conf.mat,  round(100*diag(conf.mat)/rowSums(conf.mat),2))
-	      dimnames(conf.mat) <- list(c("0","1"), c("0", "1", "Pred. Acc."))
+         conf.mat <- cbind(conf.mat,  round(100*diag(conf.mat)/rowSums(conf.mat),2))
+         dimnames(conf.mat) <- list(c("0","1"), c("0", "1", "Pred. Acc."))
 
-	      cat("\nConfusion matrix:\n")
-	      print(conf.mat)
+         cat("\nConfusion matrix:\n")
+         print(conf.mat)
 
-	      cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
-	   }
-	   else if ( x$distribution$name %in% c( "gaussian", "laplace", "poisson", "quantile", "bisquare", "tdist" ) ){
+         cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
+      }
+      else if ( x$distribution$name %in% c( "gaussian", "laplace", "poisson", "quantile", "bisquare", "tdist" ) ){
               r <- d[, 1] - predict( x, type="response", newdata=d, n.tree=best )
               if ( x$distribution$name == "poisson" ){
-	        cat( "Summary of response residuals:\n" )
-	      }
-	      else {
-	         cat( "Summary of residuals:\n" )
-	      }
-	      print( quantile( r ) )
-	      cat( "\n" )
-	   }
+           cat( "Summary of response residuals:\n" )
+         }
+         else {
+            cat( "Summary of residuals:\n" )
+         }
+         print( quantile( r ) )
+         cat( "\n" )
+      }
 
-	invisible()
+   invisible()
 }
 show.gbm <- print.gbm
 
@@ -256,8 +247,8 @@ predict.gbm <- function(object,newdata,n.trees,
    }
    i.ntree.order <- order(n.trees)
       
-   if ( object$distribution$name == "kclass" ){
-		n.class <- object$num.classes
+   if ( object$distribution$name == "multinomial" ){
+      n.class <- object$num.classes
    }
    else { n.class <- 1 }
 
@@ -265,7 +256,7 @@ predict.gbm <- function(object,newdata,n.trees,
                   X=as.double(x),
                   cRows=as.integer(cRows),
                   cCols=as.integer(cCols),
-		            cNumClasses = as.integer(n.class),
+                  cNumClasses = as.integer(n.class),
                   n.trees=as.integer(n.trees[i.ntree.order]),
                   initF=object$initF,
                   trees=object$trees,
@@ -274,17 +265,19 @@ predict.gbm <- function(object,newdata,n.trees,
                   single.tree = as.integer(single.tree),
                   PACKAGE = "gbm")
 
-   if ( length( n.trees ) > 1 || n.class > 1 ){
-     if ( object$distribution$name == "kclass" ){
-       predF <- array( predF, dim=c(cRows, n.class, length( n.trees ) ) )
-       dimnames( predF ) <- list( NULL, object$classes, n.trees )
-       predF[,, i.ntree.order ] <- predF
-     }
-     else {
-       predF <- matrix( predF, ncol=length( n.trees ), byrow=FALSE )
-       colnames( predF ) <- n.trees
-       predF[, i.ntree.order ] <- predF
-     }
+   if((length(n.trees) > 1) || (n.class > 1))
+   {
+      if(object$distribution$name=="multinomial")
+      {
+         predF <- array(predF, dim=c(cRows,n.class,length(n.trees)))
+         dimnames(predF) <- list(NULL, object$classes, n.trees)
+         predF[,,i.ntree.order] <- predF
+      } else 
+      {
+         predF <- matrix(predF, ncol=length(n.trees), byrow=FALSE)
+         colnames(predF) <- n.trees
+         predF[,i.ntree.order] <- predF
+      }
    }
 
    if(type=="response")
@@ -297,14 +290,16 @@ predict.gbm <- function(object,newdata,n.trees,
       {
          predF <- exp(predF)
       }
-      if( object$distribution$name == "kclass" ){
-         pexp <- apply( predF, 2, exp )
-         psum <- apply( pexp, 1, sum )
+      if(object$distribution$name=="multinomial")
+      {
+         pexp  <- apply(predF, 2, exp)
+         psum  <- apply(pexp,  1, sum)
          predF <- pexp / psum
-         } # XXX The nesting here differs from Daniel's version! XXX
+      }
 
-      if( length( n.trees ) == 1 & object$distribution$name != "kclass" ){
-	 predF <- as.vector( predF )
+      if((length(n.trees)==1) && (object$distribution$name!="multinomial"))
+      {
+         predF <- as.vector(predF)
       }
    }
 
@@ -325,14 +320,14 @@ predict.gbm <- function(object,newdata,n.trees,
 
 
 plot.gbm <- function(x,
-                         i.var=1,
-                         n.trees=x$n.trees,
-                         continuous.resolution=100,
-                         return.grid = FALSE,
-			 type = "link",
-                         ...)
+                     i.var=1,
+                     n.trees=x$n.trees,
+                     continuous.resolution=100,
+                     return.grid=FALSE,
+                     type="link",
+                     ...)
 {
-   if ( !is.element( type , c( "link", "response" ) ) ){
+   if (!is.element(type, c("link", "response"))){
       stop( "type must be either 'link' or 'response'")
    }
 
@@ -349,7 +344,7 @@ plot.gbm <- function(x,
    }
 
    n.class <- 1
-   if (x$distribution$name == "kclass")
+   if (x$distribution$name == "multinomial")
    {
       n.class <- x$num.classes
    }
@@ -407,25 +402,26 @@ plot.gbm <- function(x,
                 var.type = as.integer(x$var.type),
                 PACKAGE = "gbm")
 
-   if (x$distribution$name == "kclass")
+   if (x$distribution$name=="multinomial")
    {
-           ## Put result into matrix form
-	   X$y <- matrix(y, ncol = n.class)
-	   colnames(X$y) <- x$classes
-	
-	   ## Use class probabilities
-           if ( type == "response" ){
-	      X$y <- exp(X$y) / matrix(rowSums(exp(X$y)), ncol = ncol(X$y), nrow = nrow(X$y))
-	   }
+      ## Put result into matrix form
+      X$y <- matrix(y, ncol = n.class)
+      colnames(X$y) <- x$classes
+      
+      ## Use class probabilities
+      if (type=="response"){
+         X$y <- exp(X$y)
+         X$y <- X$y / matrix(rowSums(X$y), ncol=ncol(X$y), nrow=nrow(X$y))
+      }
    }
-   else if( x$distribution$name == "bernoulli" & type =="response" ){
-      X$y <- 1 / (1 + exp( -y ) )
+   else if((x$distribution$name=="bernoulli") && (type=="response")){
+      X$y <- 1/(1+exp(-y))
    }
-   else if ( x$distribution$name == "poisson" & type == "response" ){
-      X$y <- exp( y )
+   else if ((x$distribution$name=="poisson") && (type=="response")){
+      X$y <- exp(y)
    }
-   else if ( type == "response" ){
-      warning(" type 'response' only implemented for 'bernoulli', 'poisson' and 'kclass'. Ignoring" )
+   else if (type=="response"){
+      warning("type 'response' only implemented for 'bernoulli', 'poisson' and 'multinomial'. Ignoring" )
    }
    else { X$y <- y }
 
@@ -454,58 +450,58 @@ plot.gbm <- function(x,
       {
          j <- order(X$X1)
 
-         if (x$distribution$name == "kclass") {
+         if (x$distribution$name == "multinomial") {
                 if ( type == "response" ){
-		   ylabel <- "Predicted class probability"
-		}
-		else { ylabel <- paste("f(",x$var.names[i.var],")",sep="") }
-	        plot(range(X$X1), range(X$y), type = "n", xlab = x$var.names[i.var], 
-	             ylab = ylabel)
-	
-	        for (ii in 1:x$num.classes){
-		        lines(X$X1,X$y[,ii],
+         ylabel <- "Predicted class probability"
+      }
+      else { ylabel <- paste("f(",x$var.names[i.var],")",sep="") }
+           plot(range(X$X1), range(X$y), type = "n", xlab = x$var.names[i.var], 
+                ylab = ylabel)
+   
+           for (ii in 1:x$num.classes){
+              lines(X$X1,X$y[,ii],
                      xlab=x$var.names[i.var],
                      ylab=paste("f(",x$var.names[i.var],")",sep=""),
                      col = ii, ...)
-	         }
+            }
          }
-	 else if (x$distribution$name == "bernoulli" ){
-	   if ( type == "response" ){
-	      ylabel <- "Predicted probability"
-	   }
-	   else {
-	      ylabel <- paste("f(",x$var.names[i.var],")",sep="")
-	   }
-	   plot( X$X1, X$y , type = "l", xlab = x$var.names[i.var], ylab=ylabel )
-	 }
-	 else if ( x$distribution$name == "poisson" ){
-	   if (type == "response" ){
-	      ylabel <- "Predicted count"
-	   }
-	   else{
-	      ylabel <- paste("f(",x$var.names[i.var],")",sep="")
-	   } 
-	   plot( X$X1, X$y , type = "l", xlab = x$var.names[i.var], ylab=ylabel )
-	 }
+    else if (x$distribution$name == "bernoulli" ){
+      if ( type == "response" ){
+         ylabel <- "Predicted probability"
+      }
+      else {
+         ylabel <- paste("f(",x$var.names[i.var],")",sep="")
+      }
+      plot( X$X1, X$y , type = "l", xlab = x$var.names[i.var], ylab=ylabel )
+    }
+    else if ( x$distribution$name == "poisson" ){
+      if (type == "response" ){
+         ylabel <- "Predicted count"
+      }
+      else{
+         ylabel <- paste("f(",x$var.names[i.var],")",sep="")
+      } 
+      plot( X$X1, X$y , type = "l", xlab = x$var.names[i.var], ylab=ylabel )
+    }
          else {
             plot(X$X1,X$y,
                  type="l",
                  xlab=x$var.names[i.var],
-                 ylab=paste("f(",x$var.names[i.var],")",sep=""),...)	
+                 ylab=paste("f(",x$var.names[i.var],")",sep=""),...) 
          }
       }
       else
       {
-         if (x$distribution$name == "kclass") {
-	   nX <- length(X$X1)
-	   dim.y <- dim(X$y)
-	   if (type == "response" ){
-	      ylabel <- "Predicted probability"
-	   }
-	   else{ ylabel <- paste("f(",x$var.names[i.var],")",sep="") }
-	   
-	   plot(c(0,nX), range(X$y), axes = FALSE, type = "n", 
-	             xlab = x$var.names[i.var], ylab = ylabel)
+         if (x$distribution$name == "multinomial") {
+      nX <- length(X$X1)
+      dim.y <- dim(X$y)
+      if (type == "response" ){
+         ylabel <- "Predicted probability"
+      }
+      else{ ylabel <- paste("f(",x$var.names[i.var],")",sep="") }
+      
+      plot(c(0,nX), range(X$y), axes = FALSE, type = "n", 
+                xlab = x$var.names[i.var], ylab = ylabel)
            axis(side = 1, labels = FALSE, at = 0:nX)
            axis(side = 2)
 
@@ -514,38 +510,38 @@ plot.gbm <- function(x,
            segments(x1 = rep(1:nX - 0.75, each = dim.y[2]), y1 = as.vector(t(X$y)), 
                     x2 = rep(1:nX - 0.25, each = dim.y[2]), col = 1:dim.y[2])         
           }
-	  else if ( x$distribution$name == "bernoulli" & type == "response" ){
-	     ylabel <- "Predicted probability"
-	     plot( X$X1, X$y, type = "l", xlab=x$var.names[i.var], ylab=ylabel )
-	  }
-	  else if ( x$distribution$name == "poisson" & type == "response" ){
-	     ylabel <- "Predicted count"
-	     plot( X$X1, X$y, type = "l", xlab=x$var.names[i.var], ylab=ylabel )
-	  }
+     else if ( x$distribution$name == "bernoulli" & type == "response" ){
+        ylabel <- "Predicted probability"
+        plot( X$X1, X$y, type = "l", xlab=x$var.names[i.var], ylab=ylabel )
+     }
+     else if ( x$distribution$name == "poisson" & type == "response" ){
+        ylabel <- "Predicted count"
+        plot( X$X1, X$y, type = "l", xlab=x$var.names[i.var], ylab=ylabel )
+     }
          else {
            plot(X$X1,X$y,
                  type="l",
                  xlab=x$var.names[i.var],
-                 ylab=paste("f(",x$var.names[i.var],")",sep=""),...)	
+                 ylab=paste("f(",x$var.names[i.var],")",sep=""),...) 
          }
-	   }
+      }
    }
    else if(length(i.var)==2)
    {
       if(!f.factor[1] && !f.factor[2])
       {
-	      if (x$distribution$name == "kclass")
-	      {
-		      for (ii in 1:x$num.classes){
-			     X$temp <- X$y[, ii]
-		         print(levelplot(temp~X1*X2,data=X,
+         if (x$distribution$name == "multinomial")
+         {
+            for (ii in 1:x$num.classes){
+              X$temp <- X$y[, ii]
+               print(levelplot(temp~X1*X2,data=X,
                                 xlab=x$var.names[i.var[1]],
                                 ylab=x$var.names[i.var[2]],...))
                 title(paste("Class:", dimnames(X$y)[[2]][ii]))
              }
              X$temp <- NULL
-	      }
-	      else {
+         }
+         else {
             levelplot(y~X1*X2,data=X,
                         xlab=x$var.names[i.var[1]],
                         ylab=x$var.names[i.var[2]],...)
@@ -553,11 +549,11 @@ plot.gbm <- function(x,
       }
       else if(f.factor[1] && !f.factor[2])
       {
-	      if (x$distribution$name == "kclass")
-	      {
-		      for (ii in 1:x$num.classes){
-			      X$temp <- X$y[, ii]
-		          print( xyplot(temp~X2|X1,data=X,
+         if (x$distribution$name == "multinomial")
+         {
+            for (ii in 1:x$num.classes){
+               X$temp <- X$y[, ii]
+                print( xyplot(temp~X2|X1,data=X,
                         xlab=x$var.names[i.var[2]],
                         ylab=paste("f(",x$var.names[i.var[1]],",",x$var.names[i.var[2]],")",sep=""),
                         type="l",
@@ -566,8 +562,8 @@ plot.gbm <- function(x,
                 title(paste("Class:", dimnames(X$y)[[2]][ii]))
              }
              X$temp <- NULL
-	      }
-	      else {
+         }
+         else {
             xyplot(y~X2|X1,data=X,
                    xlab=x$var.names[i.var[2]],
                    ylab=paste("f(",x$var.names[i.var[1]],",",x$var.names[i.var[2]],")",sep=""),
@@ -578,11 +574,11 @@ plot.gbm <- function(x,
       }
       else if(!f.factor[1] && f.factor[2])
       {
-          if (x$distribution$name == "kclass")
-	      {
-		      for (ii in 1:x$num.classes){
-			      X$temp <- X$y[, ii]
-		          print( xyplot(temp~X1|X2,data=X,
+          if (x$distribution$name == "multinomial")
+         {
+            for (ii in 1:x$num.classes){
+               X$temp <- X$y[, ii]
+                print( xyplot(temp~X1|X2,data=X,
                                xlab=x$var.names[i.var[1]],
                                ylab=paste("f(",x$var.names[i.var[1]],",",x$var.names[i.var[2]],")",sep=""),
                                type="l",
@@ -591,8 +587,8 @@ plot.gbm <- function(x,
                 title(paste("Class:", dimnames(X$y)[[2]][ii]))
              }
              X$temp <- NULL
-	      }
-	      else {
+         }
+         else {
               xyplot(y~X1|X2,data=X,
                      xlab=x$var.names[i.var[1]],
                      ylab=paste("f(",x$var.names[i.var[1]],",",x$var.names[i.var[2]],")",sep=""),
@@ -603,19 +599,19 @@ plot.gbm <- function(x,
       }
       else
       {
-	       if (x$distribution$name == "kclass")
-	       {
-		       for (ii in 1:x$num.classes){
-			       X$temp <- X$y[, ii]
-		           print( stripplot(X1~temp|X2,data=X,
+          if (x$distribution$name == "multinomial")
+          {
+             for (ii in 1:x$num.classes){
+                X$temp <- X$y[, ii]
+                 print( stripplot(X1~temp|X2,data=X,
                                    xlab=x$var.names[i.var[2]],
                                    ylab=paste("f(",x$var.names[i.var[1]],",",x$var.names[i.var[2]],")",sep=""),
                                    ...) )
                  title(paste("Class:", dimnames(X$y)[[2]][ii]))
               }
               X$temp <- NULL
-	       }
-	       else {
+          }
+          else {
               stripplot(X1~y|X2,data=X,
                         xlab=x$var.names[i.var[2]],
                         ylab=paste("f(",x$var.names[i.var[1]],",",x$var.names[i.var[2]],")",sep=""),
@@ -633,19 +629,19 @@ plot.gbm <- function(x,
       # 0 factor, 3 continuous
       if(sum(f.factor)==0)
       {
-	       X.new$X3 <- equal.count(X.new$X3)
-	       if (x$distribution$name == "kclass")
-	       {
-		       for (ii in 1:x$num.classes){
-			       X.new$temp <- X.new$y[, ii]
-		           print( levelplot(temp~X1*X2|X3,data=X.new,
+          X.new$X3 <- equal.count(X.new$X3)
+          if (x$distribution$name == "multinomial")
+          {
+             for (ii in 1:x$num.classes){
+                X.new$temp <- X.new$y[, ii]
+                 print( levelplot(temp~X1*X2|X3,data=X.new,
                                    xlab=x$var.names[i.var[i[1]]],
                                    ylab=x$var.names[i.var[i[2]]],...) )
                  title(paste("Class:", dimnames(X.new$y)[[2]][ii]))
               }
               X.new$temp <- NULL
-	       }
-	       else {
+          }
+          else {
             levelplot(y~X1*X2|X3,data=X.new,
                         xlab=x$var.names[i.var[i[1]]],
                         ylab=x$var.names[i.var[i[2]]],...)
@@ -654,18 +650,18 @@ plot.gbm <- function(x,
       # 1 factor, 2 continuous
       else if(sum(f.factor)==1)
       {
-	       if (x$distribution$name == "kclass")
-	       {
-		       for (ii in 1:x$num.classes){
-			       X.new$temp <- X.new$y[, ii]
-		           print( levelplot(temp~X1*X2|X3,data=X.new,
+          if (x$distribution$name == "multinomial")
+          {
+             for (ii in 1:x$num.classes){
+                X.new$temp <- X.new$y[, ii]
+                 print( levelplot(temp~X1*X2|X3,data=X.new,
                                    xlab=x$var.names[i.var[i[1]]],
                                    ylab=x$var.names[i.var[i[2]]],...))
                  title(paste("Class:", dimnames(X.new$y)[[2]][ii]) )
               }
               X.new$temp <- NULL
-	       }
-	       else {
+          }
+          else {
               levelplot(y~X1*X2|X3,data=X.new,
                         xlab=x$var.names[i.var[i[1]]],
                         ylab=x$var.names[i.var[i[2]]],...)
@@ -674,11 +670,11 @@ plot.gbm <- function(x,
       # 2 factors, 1 continuous
       else if(sum(f.factor)==2)
       {
-	       if (x$distribution$name == "kclass")
-	       {
-		       for (ii in 1:x$num.classes){
-			       X.new$temp <- X.new$y[, ii]
-		           print( xyplot(temp~X1|X2*X3,data=X.new,
+          if (x$distribution$name == "multinomial")
+          {
+             for (ii in 1:x$num.classes){
+                X.new$temp <- X.new$y[, ii]
+                 print( xyplot(temp~X1|X2*X3,data=X.new,
                                 type="l",
                                 xlab=x$var.names[i.var[i[1]]],
                                 ylab=paste("f(",paste(x$var.names[i.var[1:3]],collapse=","),")",sep=""),
@@ -687,8 +683,8 @@ plot.gbm <- function(x,
                  title(paste("Class:", dimnames(X.new$y)[[2]][ii]) )
               }
               X.new$temp <- NULL
-	       }
-	       else {
+          }
+          else {
               xyplot(y~X1|X2*X3,data=X.new,
                      type="l",
                      xlab=x$var.names[i.var[i[1]]],
@@ -700,19 +696,19 @@ plot.gbm <- function(x,
       # 3 factors, 0 continuous
       else if(sum(f.factor)==3)
       {
-	       if (x$distribution$name == "kclass")
-	       {
-		       for (ii in 1:x$num.classes){
-			       X.new$temp <- X.new$y[, ii]
-		           print( stripplot(X1~temp|X2*X3,data=X.new,
+          if (x$distribution$name == "multinomial")
+          {
+             for (ii in 1:x$num.classes){
+                X.new$temp <- X.new$y[, ii]
+                 print( stripplot(X1~temp|X2*X3,data=X.new,
                                    xlab=x$var.names[i.var[i[1]]],
                                    ylab=paste("f(",paste(x$var.names[i.var[1:3]],collapse=","),")",sep=""),
                                    ...) )
                   title(paste("Class:", dimnames(X.new$y)[[2]][ii]) )
               }
               X.new$temp <- NULL
-	       }
-	       else {
+          }
+          else {
                stripplot(X1~y|X2*X3,data=X.new,
                          xlab=x$var.names[i.var[i[1]]],
                          ylab=paste("f(",paste(x$var.names[i.var[1:3]],collapse=","),")",sep=""),
@@ -731,10 +727,6 @@ gbm.more <- function(object,
                      verbose = NULL)
 {
    theCall <- match.call()
-   nClass <- 1
-   if (object$distribution$name == "kclass"){
-      nClass <- object$num.classes
-   }
    if(is.null(object$Terms) && is.null(object$data))
    {
       stop("The gbm model was fit using gbm.fit (rather than gbm) and keep.data was set to FALSE. gbm.more cannot locate the dataset.")
@@ -749,7 +741,7 @@ gbm.more <- function(object,
       Terms <- attr(m, "terms")
       a <- attributes(Terms)
 
-      y <- as.vector(model.extract(m, response))
+      y <- as.vector(model.extract(m, "response"))
       offset <- model.extract(m,offset)
       x <- model.frame(delete.response(Terms),
                        data,
@@ -782,12 +774,17 @@ gbm.more <- function(object,
          if(!is.na(offset)) offset <- offset[i.timeorder]
          object$fit <- object$fit[i.timeorder]
       }
-	  else if (object$distribution$name == "bisquare" ){
-		 Misc <- estBisqParam( object$distribution$eff )
-	  }
+      else if (object$distribution$name == "bisquare" ){
+         Misc <- estBisqParam(object$distribution$eff)
+      }
       else if(object$distribution$name == "tdist" ){
-		 Misc <- object$distribution$df
-     }
+         Misc <- object$distribution$df
+      }
+
+      nClass <- 1
+      if (x$distribution$name == "multinomial"){
+         nClass <- x$num.classes
+      }
 
       # create index upfront... subtract one for 0 based order
       x.order <- apply(x[1:object$nTrain,,drop=FALSE],2,order,na.last=FALSE)-1
@@ -803,6 +800,7 @@ gbm.more <- function(object,
       offset      <- object$data$offset
       Misc        <- object$data$Misc
       w           <- object$data$w
+      nClass      <- object$n.classes
       cRows <- length(y)
       cCols <- length(x)/cRows
       if(object$distribution$name == "coxph")
@@ -833,7 +831,7 @@ gbm.more <- function(object,
                     n.trees = as.integer(n.new.trees),
                     interaction.depth = as.integer(object$interaction.depth),
                     n.minobsinnode = as.integer(object$n.minobsinnode),
-					n.classes = as.integer(nClass),
+                    n.classes = as.integer(nClass),
                     shrinkage = as.double(object$shrinkage),
                     bag.fraction = as.double(object$bag.fraction),
                     nTrain = as.integer(object$nTrain),
@@ -883,7 +881,7 @@ gbm.more <- function(object,
       gbm.obj$data <- NULL
       gbm.obj$m <- object$m
    }
-	gbm.obj$call <- theCall
+   gbm.obj$call <- theCall
 
    class(gbm.obj) <- "gbm"
    return(gbm.obj)
@@ -1012,7 +1010,7 @@ gbm.fit <- function(x,y,
    }
    supported.distributions <-
       c("bernoulli","gaussian","poisson","adaboost","laplace","coxph","quantile",
-        "bisquare", "tdist", "kclass", "huberized")
+        "bisquare", "tdist", "multinomial", "huberized")
    # check potential problems with the distributions
    if(!is.element(distribution$name,supported.distributions))
    {
@@ -1095,27 +1093,27 @@ gbm.fit <- function(x,y,
    }
    if(distribution$name == "tdist")
    {
-   	  if (is.null(distribution$df) || !is.numeric(distribution$df)){
-   	  	Misc <- 4
-   	  }
-   	  else {
-   	  	Misc <- distribution$df[1]
-   	  }
+        if (is.null(distribution$df) || !is.numeric(distribution$df)){
+         Misc <- 4
+        }
+        else {
+         Misc <- distribution$df[1]
+        }
    }
-   if (distribution$name == "kclass")
+   if (distribution$name == "multinomial")
    {
-	  ## Ensure that the training set contains all classes
-	  classes <- attr(factor(y), "levels")
+     ## Ensure that the training set contains all classes
+     classes <- attr(factor(y), "levels")
       nClass <- length(classes)
 
       if (nClass > nTrain){
-	      stop(paste("Number of classes (", nClass, 
-	                 ") must be less than the size of the training set (", nTrain, ")", 
-	                 sep = ""))
+         stop(paste("Number of classes (", nClass, 
+                    ") must be less than the size of the training set (", nTrain, ")", 
+                    sep = ""))
       }
-	
+   
       f <- function(a,x){
-	      min((1:length(x))[x==a])
+         min((1:length(x))[x==a])
       }
 
       new.idx <- as.vector(sapply(classes, function(a,x){ min((1:length(x))[x==a]) }, y))
@@ -1127,9 +1125,9 @@ gbm.fit <- function(x,y,
       x <- x[new.idx, ]
       w <- w[new.idx]
       if (!is.null(offset)){
-	      offset <- offset[new.idx]
+         offset <- offset[new.idx]
       }
-	
+   
       ## Get the factors
       y <- as.numeric(as.vector(outer(y, classes, "==")))
       
@@ -1138,7 +1136,7 @@ gbm.fit <- function(x,y,
       if (!is.null(offset)){
          offset <- rep(offset, nClass)
       }
-   } # close if (dist... == "kclass"
+   } # close if (dist... == "multinomial"
    
    if(!is.numeric(y))
    {
@@ -1194,16 +1192,16 @@ gbm.fit <- function(x,y,
                        "oobag.improve","trees","c.splits")
 
    ## If K-Classification is used then split the fit and tree components
-   if (distribution$name == "kclass"){
-   	    gbm.obj$fit <- matrix(gbm.obj$fit, ncol = nClass)
-   	    dimnames(gbm.obj$fit)[[2]] <- classes
-  	    gbm.obj$classes <- classes
-   	    gbm.obj$num.classes <- nClass
-   	    
-		## Also get the class estimators
-		exp.f <- exp(gbm.obj$fit)
-		denom <- matrix(rep(rowSums(exp.f), nClass), ncol = nClass)
-		gbm.obj$estimator <- exp.f/denom
+   if (distribution$name == "multinomial"){
+          gbm.obj$fit <- matrix(gbm.obj$fit, ncol = nClass)
+          dimnames(gbm.obj$fit)[[2]] <- classes
+       gbm.obj$classes <- classes
+          gbm.obj$num.classes <- nClass
+          
+      ## Also get the class estimators
+      exp.f <- exp(gbm.obj$fit)
+      denom <- matrix(rep(rowSums(exp.f), nClass), ncol = nClass)
+      gbm.obj$estimator <- exp.f/denom
    }
 
    gbm.obj$bag.fraction <- bag.fraction
@@ -1235,14 +1233,14 @@ gbm.fit <- function(x,y,
          gbm.obj$data <- list(y=y,x=x,x.order=x.order,offset=offset,Misc=Misc,w=w,
                               i.timeorder=i.timeorder)
       }
-      else if ( distribution$name == "kclass" ){
+      else if ( distribution$name == "multinomial" ){
          # Restore original order of the data
          new.idx <- order( new.idx )
          gbm.obj$data <- list( y=as.vector(matrix(y, ncol=length(classes),byrow=FALSE)[new.idx,]),
-	                       x=as.vector(matrix(x, ncol=length(var.names), byrow=FALSE)[new.idx,]),
-	                       x.order=x.order,
-			       offset=offset[new.idx],
-			       Misc=Misc, w=w[new.idx] )
+                          x=as.vector(matrix(x, ncol=length(var.names), byrow=FALSE)[new.idx,]),
+                          x.order=x.order,
+                offset=offset[new.idx],
+                Misc=Misc, w=w[new.idx] )
       }
       else
       {
@@ -1274,7 +1272,7 @@ gbm <- function(formula = formula(data),
                 cv.folds=0,
                 keep.data = TRUE,
                 verbose = TRUE,
-		class.stratify.cv )
+      class.stratify.cv )
 {
    theCall <- match.call()
 
@@ -1293,14 +1291,14 @@ gbm <- function(formula = formula(data),
    if ( missing( distribution ) ){
      if ( length( unique( y ) ) == 2 ){ distribution <- "bernoulli" }
      else if ( class( y ) == "Surv" ){ distribution <- "coxph" }
-     else if ( is.factor( y ) ){ distribution <- "kclass" }
+     else if ( is.factor( y ) ){ distribution <- "multinomial" }
      else{
         distribution <- "bisquare"
         cat( paste( "Distribution not specified, assuming", distribution, "...\n" ) )
      }
    }
 
-#   if ( length( distribution ) == 1 && distribution != "kclass" ){
+#   if ( length( distribution ) == 1 && distribution != "multinomial" ){
 #      y <- model.response(mf, "numeric")
 #   }
 #   else { y <- model.response( mf ) }
@@ -1317,16 +1315,16 @@ gbm <- function(formula = formula(data),
    response.name <- as.character(formula[[2]])
    if(is.character(distribution)) distribution <- list(name=distribution)
 
-	if ( missing( class.stratify.cv ) ){
-		if ( distribution$name == "kclass" ){ class.stratify.cv <- TRUE }
-		else class.stratify.cv <- FALSE
-	}
-	else {
-		if ( !is.element( distribution$name, c( "bernoulli", "kclass" ) ) ){
-			warning("You can only use class.stratify.cv when distribution is bernoulli or kclass. Ignored.")
-			class.stratify.cv <- FALSE
-		}
-	}
+   if ( missing( class.stratify.cv ) ){
+      if ( distribution$name == "multinomial" ){ class.stratify.cv <- TRUE }
+      else class.stratify.cv <- FALSE
+   }
+   else {
+      if ( !is.element( distribution$name, c( "bernoulli", "multinomial" ) ) ){
+         warning("You can only use class.stratify.cv when distribution is bernoulli or multinomial. Ignored.")
+         class.stratify.cv <- FALSE
+      }
+   }
 
    cv.error <- NULL
    if(cv.folds>1)
@@ -1334,19 +1332,19 @@ gbm <- function(formula = formula(data),
       if(distribution$name=="coxph") i.train <- 1:floor(train.fraction*nrow(y))
       else                      i.train <- 1:floor(train.fraction*length(y))
 
-      if ( distribution$name %in% c( "bernoulli", "kclass" ) & class.stratify.cv ){
+      if ( distribution$name %in% c( "bernoulli", "multinomial" ) & class.stratify.cv ){
            nc <- table(y[i.train]) # Number in each class
            uc <- names(nc)
-	   if ( min( nc ) < cv.folds ){
+      if ( min( nc ) < cv.folds ){
               stop( paste("The smallest class has only", min(nc), "objects in the training set. Can't do", cv.folds, "fold cross-validation."))
-	   }
-	   cv.group <- vector( length = length( i.train ) )
-	  for ( i in 1:length( uc ) ){
-			cv.group[ y[i.train] == uc[i] ] <- sample( rep( 1:cv.folds , length = nc[i] ) )
+      }
+      cv.group <- vector( length = length( i.train ) )
+     for ( i in 1:length( uc ) ){
+         cv.group[ y[i.train] == uc[i] ] <- sample( rep( 1:cv.folds , length = nc[i] ) )
           }
       }
       else {
-	      cv.group <- sample(rep(1:cv.folds, length=length(i.train)))
+         cv.group <- sample(rep(1:cv.folds, length=length(i.train)))
       }
 
       cv.error <- rep(0, n.trees)
@@ -1470,16 +1468,15 @@ gbm.perf <- function(object,
                                co="Cox partial deviance",
                                la="Absolute loss",
                                qu="Quantile loss",
-			                      kc="Multinomial deviance",
-               			       bi="Bisquare loss",
-			                      td="t-distribution deviance",
-			                      hu="Huberized square hinge loss"
-			       )
+                               mu="Multinomial deviance",
+                               bi="Bisquare loss",
+                               td="t-distribution deviance"
+                    )
       if(object$train.fraction==1)
       {  # HS Next line changed to scale axis to include other error
 #         ylim <- range(object$train.error)
-		  if ( method=="cv" ){ ylim <- range(object$train.error, object$cv.error) }
-		  else if ( method == "test" ){ ylim <- range( object$train.error, object$valid.error ) }
+        if ( method=="cv" ){ ylim <- range(object$train.error, object$cv.error) }
+        else if ( method == "test" ){ ylim <- range( object$train.error, object$valid.error ) }
       }
       else
       {
@@ -1533,8 +1530,8 @@ gbm.perf <- function(object,
 
 relative.influence <- function(object,
                                n.trees,
-			       scale. = FALSE,
-			       sort. = FALSE )
+                               scale. = FALSE,
+                               sort. = FALSE )
 {
 
    if( missing( n.trees ) ){
@@ -1976,8 +1973,8 @@ interact.gbm <- function(x, data, i.var = 1, n.trees = x$n.trees)
     }
 
     n.class <- 1
-    if (x$distribution$name == "kclass") {
-	   n.class <- x$num.classes
+    if (x$distribution$name=="multinomial") {
+        n.class <- x$num.classes
     }    
 
     unique.tab <- function(z,i.var)
@@ -1999,45 +1996,49 @@ interact.gbm <- function(x, data, i.var = 1, n.trees = x$n.trees)
    # generate a list with all combinations of variables
    a <- apply(expand.grid(rep(list(c(FALSE,TRUE)), length(i.var)))[-1,],1,
               function(x) as.numeric(which(x)))
-   F <- vector("list",length(a))
+   FF <- vector("list",length(a))
    for(j in 1:length(a))
    {
-      F[[j]]$Z <- data.frame(unique.tab(data, x$var.names[i.var[a[[j]]]]))
-      F[[j]]$n <- as.numeric(F[[j]]$Z$n)
-      F[[j]]$Z$n <- NULL
-      F[[j]]$f <- .Call("gbm_plot", 
-                        X = as.double(data.matrix(F[[j]]$Z)), 
-                        cRows = as.integer(nrow(F[[j]]$Z)), 
-                        cCols = as.integer(ncol(F[[j]]$Z)), 
-						n.class = as.integer( n.class ),
+      FF[[j]]$Z <- data.frame(unique.tab(data, x$var.names[i.var[a[[j]]]]))
+      FF[[j]]$n <- as.numeric(FF[[j]]$Z$n)
+      FF[[j]]$Z$n <- NULL
+      FF[[j]]$f <- .Call("gbm_plot", 
+                        X = as.double(data.matrix(FF[[j]]$Z)), 
+                        cRows = as.integer(nrow(FF[[j]]$Z)), 
+                        cCols = as.integer(ncol(FF[[j]]$Z)), 
+                        n.class = as.integer(n.class),
                         i.var = as.integer(i.var[a[[j]]] - 1),
                         n.trees = as.integer(n.trees), 
                         initF = as.double(x$initF), 
-                        trees = x$trees, c.splits = x$c.splits,
-                        var.type = as.integer(x$var.type), PACKAGE = "gbm")
+                        trees = x$trees, 
+                        c.splits = x$c.splits,
+                        var.type = as.integer(x$var.type), 
+                        PACKAGE = "gbm")
       # center the values
-      F[[j]]$f <- with(F[[j]], f - weighted.mean(f,n))
+      FF[[j]]$f <- with(FF[[j]], f - weighted.mean(f,n))
       # precompute the sign of these terms to appear in H
-      F[[j]]$sign <- ifelse(length(a[[j]]) %% 2 == length(i.var) %% 2, 1, -1)
+      FF[[j]]$sign <- ifelse(length(a[[j]]) %% 2 == length(i.var) %% 2, 1, -1)
    }
 
-   H <- F[[length(a)]]$f
+   H <- FF[[length(a)]]$f
    for(j in 1:(length(a)-1))
    {
-      i <- match(apply(F[[length(a)]]$Z[,a[[j]],drop=FALSE],1,paste,collapse="\r"),
-                 apply(F[[j]]$Z,1,paste,collapse="\r"))
-      H <- H + with(F[[j]], sign*f[i])
+      i <- match(apply(FF[[length(a)]]$Z[,a[[j]],drop=FALSE],1,paste,collapse="\r"),
+                 apply(FF[[j]]$Z,1,paste,collapse="\r"))
+      H <- H + with(FF[[j]], sign*f[i])
    }
-   if ( is.null(dim(H))){
-	   H <- weighted.mean(H^2, F[[length(a)]]$n)/
-    	    weighted.mean((F[[length(a)]]$f)^2,F[[length(a)]]$n) 
+   if (is.null(dim(H)))
+   {
+      H <- weighted.mean(H^2, FF[[length(a)]]$n)/
+           weighted.mean((FF[[length(a)]]$f)^2,FF[[length(a)]]$n) 
    }
    else {
-	   H <- apply(H^2, 2, weighted.mean, w = FF[[length(a)]]$n, na.rm = TRUE)/
-    	    apply((FF[[length(a)]]$f)^2, 2, weighted.mean, w = FF[[length(a)]]$n, na.rm = T) 
+      H <- apply(H^2, 2, weighted.mean, w = FF[[length(a)]]$n, na.rm = TRUE)/
+           apply((FF[[length(a)]]$f)^2, 2, weighted.mean, 
+                  w = FF[[length(a)]]$n, na.rm = TRUE)
    }
-   if (x$  distribution$name == "kclass"){
-	    names(H) <- x$classes
+   if (x$distribution$name=="multinomial"){
+       names(H) <- x$classes
    }
    return(sqrt(H))
 }

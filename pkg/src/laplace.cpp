@@ -4,14 +4,15 @@
 
 CLaplace::CLaplace()
 {
-	// Create a new LocationM object (for weighted medians)
-	double *pTemp = NULL;
-	mpLocM = new CLocationM("Other", 0, pTemp);
+   mpLocM = NULL;
 }
 
 CLaplace::~CLaplace()
 {
-	delete mpLocM;
+   if(mpLocM != NULL)
+   {
+      delete mpLocM;
+   }
 }
 
 
@@ -25,7 +26,7 @@ GBMRESULT CLaplace::ComputeWorkingResponse
     double *adWeight,
     bool *afInBag,
     unsigned long nTrain,
-	int cIdxOff
+    int cIdxOff
 )
 {
     unsigned long i = 0;
@@ -62,29 +63,39 @@ GBMRESULT CLaplace::InitF
 )
 {
     double dOffset = 0.0;
-    int ii = 0;
-	int nLength = int(cLength);
+    unsigned long ii = 0;
+    int nLength = int(cLength);
 
-//    vecd.resize(cLength);
-//    for(i=0; i<cLength; i++)
-//    {
-//        dOffset = (adOffset==NULL) ? 0.0 : adOffset[i];
-//        vecd[i] = adY[i] - dOffset;
-//    }
+    double *adArr = NULL;
 
-//    nth_element(vecd.begin(), vecd.begin() + int(cLength/2.0), vecd.end());
-//    dInitF = *(vecd.begin() + int(cLength/2.0));
+    // Create a new LocationM object (for weighted medians)
+    double *pTemp = NULL;
+    mpLocM = new CLocationM("Other", 0, pTemp);
+    if(mpLocM == NULL)
+    {
+        hr = GBM_OUTOFMEMORY;
+        goto Error;
+    }
+    
+    adArr = new double[cLength];
+    if(adArr == NULL)
+    {
+        hr = GBM_OUTOFMEMORY;
+        goto Error;
+    }
 
-	double *adArr = new double[cLength];
-	for (ii = 0; ii < cLength; ii++)
-	{
+    for (ii = 0; ii < cLength; ii++)
+    {
         dOffset = (adOffset==NULL) ? 0.0 : adOffset[ii];
         adArr[ii] = adY[ii] - dOffset;
     }
 
-	dInitF = mpLocM->Median(nLength, adArr, adWeight);
+    dInitF = mpLocM->Median(nLength, adArr, adWeight);
 
-    return GBM_OK;
+Cleanup:
+    return hr;
+Error:
+    goto Cleanup;
 }
 
 
@@ -96,7 +107,7 @@ double CLaplace::Deviance
     double *adWeight,
     double *adF,
     unsigned long cLength,
-	int cIdxOff
+   int cIdxOff
 )
 {
     unsigned long i=0;
@@ -140,7 +151,7 @@ GBMRESULT CLaplace::FitBestConstant
     unsigned long cMinObsInNode,
     bool *afInBag,
     double *adFadj,
-	int cIdxOff
+   int cIdxOff
 )
 {
     GBMRESULT hr = GBM_OK;
@@ -152,43 +163,28 @@ GBMRESULT CLaplace::FitBestConstant
 
 //    vecd.resize(nTrain); // should already be this size from InitF
   
-	double *adArr = new double[nTrain];
-	double *adW2 = new double[nTrain];
+   double *adArr = new double[nTrain];
+   double *adW2 = new double[nTrain];
 
     for(iNode=0; iNode<cTermNodes; iNode++)
     {
         if(vecpTermNodes[iNode]->cN >= cMinObsInNode)
         {
-//            iVecd = 0;
-//            for(iObs=0; iObs<nTrain; iObs++)
-//            {
-//                if(afInBag[iObs] && (aiNodeAssign[iObs] == iNode))
-//                {
-//                    dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
-//                    vecd[iVecd] = adY[iObs] - dOffset - adF[iObs];
-//                    iVecd++;
-//		}
-//            }
-//            nth_element(vecd.begin(), 
-//                        vecd.begin() + int(iVecd/2.0), 
-//                        vecd.begin() + int(iVecd));
-//            vecpTermNodes[iNode]->dPrediction = *(vecd.begin() + int(iVecd/2.0));
-
-			iVecd = 0;
+         iVecd = 0;
             for(iObs=0; iObs<nTrain; iObs++)
             {
                 if(afInBag[iObs] && (aiNodeAssign[iObs] == iNode))
                 {
                     dOffset = (adOffset==NULL) ? 0.0 : adOffset[iObs];
                     adArr[iVecd] = adY[iObs] - dOffset - adF[iObs];
-					adW2[iVecd] = adW[iObs];
-				    iVecd++;
-				}
-
-				
+               adW2[iVecd] = adW[iObs];
+                iVecd++;
             }
 
-			vecpTermNodes[iNode]->dPrediction = mpLocM->Median(iVecd, adArr, adW2);
+            
+            }
+
+         vecpTermNodes[iNode]->dPrediction = mpLocM->Median(iVecd, adArr, adW2);
 
         }
     }

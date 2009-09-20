@@ -27,7 +27,7 @@
 #include "quantile.h"
 #include "bisquare.h"
 #include "tdist.h"
-#include "kclass.h"
+#include "multinomial.h"
 #include "gbm_engine.h"
 #include "locationm.h"
 #include "huberized.h"
@@ -51,7 +51,7 @@ GBMRESULT gbm_setup
     int cTrees,
     int cLeaves,
     int cMinObsInNode,
-	int cNumClasses,
+    int cNumClasses,
     double dShrinkage,
     double dBagFraction,
     int cTrain,

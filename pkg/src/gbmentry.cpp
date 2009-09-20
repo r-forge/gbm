@@ -23,7 +23,7 @@ SEXP gbm
     SEXP rcTrees,
     SEXP rcDepth,       // interaction depth
     SEXP rcMinObsInNode,
-	SEXP rcNumClasses,
+    SEXP rcNumClasses,
     SEXP rdShrinkage,
     SEXP rdBagFraction,
     SEXP rcTrain,
@@ -60,7 +60,7 @@ SEXP gbm
 
     int i = 0;
     int iT = 0;
-	int iK = 0;
+    int iK = 0;
     int cTrees = INTEGER(rcTrees)[0];
     const int cResultComponents = 7;
     // rdInitF, radF, radTrainError, radValidError, radOOBagImprove
@@ -70,7 +70,7 @@ SEXP gbm
     // riRightNode, riMissingNode, rdErrorReduction, rdWeight, rdPred
     int cNodes = 0;
     int cTrain = INTEGER(rcTrain)[0];
-	int cNumClasses = INTEGER(rcNumClasses)[0];
+    int cNumClasses = INTEGER(rcNumClasses)[0];
 
     double dTrainError = 0.0;
     double dValidError = 0.0;
@@ -106,7 +106,7 @@ SEXP gbm
                    INTEGER(rcTrees)[0],
                    INTEGER(rcDepth)[0],
                    INTEGER(rcMinObsInNode)[0],
-				   INTEGER(rcNumClasses)[0],
+                   INTEGER(rcNumClasses)[0],
                    REAL(rdShrinkage)[0],
                    REAL(rdBagFraction)[0],
                    INTEGER(rcTrain)[0],
@@ -133,7 +133,7 @@ SEXP gbm
                           REAL(rdBagFraction)[0],
                           INTEGER(rcDepth)[0],
                           INTEGER(rcMinObsInNode)[0],
-						  INTEGER(rcNumClasses)[0]);
+                          INTEGER(rcNumClasses)[0]);
 
     if(GBM_FAILED(hr))
     {
@@ -196,26 +196,26 @@ SEXP gbm
     }
     for(iT=0; iT<cTrees; iT++)
     {
-	    // Update the parameters
-	    hr = pDist->UpdateParams(REAL(radF), pData->adOffset, pData->adWeight, cTrain);
+        // Update the parameters
+        hr = pDist->UpdateParams(REAL(radF), pData->adOffset, pData->adWeight, cTrain);
 
-	    if(GBM_FAILED(hr))
-		{
+        if(GBM_FAILED(hr))
+        {
            goto Error;
-		}
-		REAL(radTrainError)[iT] = 0.0;
-		REAL(radValidError)[iT] = 0.0;
-		REAL(radOOBagImprove)[iT] = 0.0;
-		for (iK = 0; iK < cNumClasses; iK++)
-		{
-			hr = pGBM->iterate(REAL(radF),
+        }
+        REAL(radTrainError)[iT] = 0.0;
+        REAL(radValidError)[iT] = 0.0;
+        REAL(radOOBagImprove)[iT] = 0.0;
+        for (iK = 0; iK < cNumClasses; iK++)
+        {
+            hr = pGBM->iterate(REAL(radF),
                                dTrainError,dValidError,dOOBagImprove,
                                cNodes, cNumClasses, iK);
 
             if(GBM_FAILED(hr))
-			{
+            {
                 goto Error;
-			}
+            }
 
             // store the performance measures
             REAL(radTrainError)[iT] += dTrainError;
@@ -230,7 +230,7 @@ SEXP gbm
             PROTECT(rdSplitPoint = allocVector(REALSXP, cNodes));
             PROTECT(riLeftNode = allocVector(INTSXP, cNodes));
             PROTECT(riRightNode = allocVector(INTSXP, cNodes));
-			PROTECT(riMissingNode = allocVector(INTSXP, cNodes));
+            PROTECT(riMissingNode = allocVector(INTSXP, cNodes));
             PROTECT(rdErrorReduction = allocVector(REALSXP, cNodes));
             PROTECT(rdWeight = allocVector(REALSXP, cNodes));
             PROTECT(rdPred = allocVector(REALSXP, cNodes));
@@ -257,9 +257,9 @@ SEXP gbm
                                    REAL(rdWeight),
                                    REAL(rdPred),
                                    INTEGER(rcCatSplitsOld)[0]);
-		} // Close for iK
+        } // Close for iK
 
-		// print the information
+        // print the information
         if((iT <= 9) ||
            ((iT+1+INTEGER(rcTreesOld)[0])/100 ==
             (iT+1+INTEGER(rcTreesOld)[0])/100.0) ||
@@ -408,65 +408,64 @@ SEXP gbm_pred
       }
       while(iTree<cTrees*cNumClasses)
       {
-		  for (iClass = 0; iClass < cNumClasses; iClass++)
-		  {
+         for (iClass = 0; iClass < cNumClasses; iClass++)
+         {
+            rThisTree   = VECTOR_ELT(rTrees,iTree);
+            // these relate to columns returned by pretty.gbm.tree()
+            aiSplitVar    = INTEGER(VECTOR_ELT(rThisTree,0));
+            adSplitCode   = REAL   (VECTOR_ELT(rThisTree,1));
+            aiLeftNode    = INTEGER(VECTOR_ELT(rThisTree,2));
+            aiRightNode   = INTEGER(VECTOR_ELT(rThisTree,3));
+            aiMissingNode = INTEGER(VECTOR_ELT(rThisTree,4));
 
-			  rThisTree 	= VECTOR_ELT(rTrees,iTree);
-			  // these relate to columns returned by pretty.gbm.tree()
-			  aiSplitVar	= INTEGER(VECTOR_ELT(rThisTree,0));
-			  adSplitCode	= REAL	 (VECTOR_ELT(rThisTree,1));
-			  aiLeftNode	= INTEGER(VECTOR_ELT(rThisTree,2));
-			  aiRightNode	= INTEGER(VECTOR_ELT(rThisTree,3));
-			  aiMissingNode = INTEGER(VECTOR_ELT(rThisTree,4));
-
-			  for(iObs=0; iObs<cRows; iObs++)
-			  {
-				 iCurrentNode = 0;
-				 while(aiSplitVar[iCurrentNode] != -1)
-				 {
-					dX = REAL(radX)[aiSplitVar[iCurrentNode]*cRows + iObs];
-					// missing?
-					if(ISNA(dX))
-					{
-					   iCurrentNode = aiMissingNode[iCurrentNode];
-					}
-					// continuous?
-					else if(INTEGER(raiVarType)[aiSplitVar[iCurrentNode]] == 0)
-					{
-					   if(dX < adSplitCode[iCurrentNode])
-					   {
-						 iCurrentNode = aiLeftNode[iCurrentNode];
-					   }
-					   else
-					   {
-						   iCurrentNode = aiRightNode[iCurrentNode];
-					   }
-					}
-					else // categorical
-					{
-				 	    iCatSplitIndicator = INTEGER(
-								VECTOR_ELT(rCSplits,
-								              (int)adSplitCode[iCurrentNode]))[(int)dX];
-					    if(iCatSplitIndicator==-1)
-					   {
-							 iCurrentNode = aiLeftNode[iCurrentNode];
-					   }
-					   else if(iCatSplitIndicator==1)
-					   {
-							 iCurrentNode = aiRightNode[iCurrentNode]; 
-					   }  
-					   else // categorical level not present in training
-					   {
-							 iCurrentNode = aiMissingNode[iCurrentNode];
-					   }
-					}
-				 }
-				 REAL(radPredF)[cRows*cNumClasses*iPredIteration+cRows*iClass+iObs] += 
-					adSplitCode[iCurrentNode]; // add the prediction
-			  } // iObs
-			  iTree++;
-          } // iClass
-	  } // iTree
+            for(iObs=0; iObs<cRows; iObs++)
+            {
+               iCurrentNode = 0;
+               while(aiSplitVar[iCurrentNode] != -1)
+               {
+                  dX = REAL(radX)[aiSplitVar[iCurrentNode]*cRows + iObs];
+                  // missing?
+                  if(ISNA(dX))
+                  {
+                     iCurrentNode = aiMissingNode[iCurrentNode];
+                  }
+                  // continuous?
+                  else if(INTEGER(raiVarType)[aiSplitVar[iCurrentNode]] == 0)
+                  {
+                     if(dX < adSplitCode[iCurrentNode])
+                     {
+                        iCurrentNode = aiLeftNode[iCurrentNode];
+                     }
+                     else
+                     {
+                        iCurrentNode = aiRightNode[iCurrentNode];
+                     }
+                  }
+                  else // categorical
+                  {
+                     iCatSplitIndicator = INTEGER(
+                                 VECTOR_ELT(rCSplits,
+                                            (int)adSplitCode[iCurrentNode]))[(int)dX];
+                     if(iCatSplitIndicator==-1)
+                     {
+                        iCurrentNode = aiLeftNode[iCurrentNode];
+                     }
+                     else if(iCatSplitIndicator==1)
+                     {
+                        iCurrentNode = aiRightNode[iCurrentNode]; 
+                     }  
+                     else // categorical level not present in training
+                     {
+                        iCurrentNode = aiMissingNode[iCurrentNode];
+                     }
+                  }
+               }
+               REAL(radPredF)[cRows*cNumClasses*iPredIteration+cRows*iClass+iObs] += 
+                  adSplitCode[iCurrentNode]; // add the prediction
+            } // iObs
+            iTree++;
+         } // iClass
+      } // iTree
    }  // iPredIteration
     
 Cleanup:
@@ -483,7 +482,7 @@ SEXP gbm_plot
     SEXP rcRows,        // number of rows in X
     SEXP rcCols,        // number of columns in X
     SEXP rcNumClasses,  // number of classes
-	SEXP raiWhichVar,   // length=cCols, index of which var cols of X are
+    SEXP raiWhichVar,   // length=cCols, index of which var cols of X are
     SEXP rcTrees,       // number of trees to use
     SEXP rdInitF,       // initial value
     SEXP rTrees,        // tree list object
@@ -495,11 +494,11 @@ SEXP gbm_plot
     int i = 0;
     int iTree = 0;
     int iObs = 0;
-	int iClass = 0;
+    int iClass = 0;
     int cRows = INTEGER(rcRows)[0];
     int cCols = INTEGER(rcCols)[0];
     int cTrees = INTEGER(rcTrees)[0];
-	int cNumClasses = INTEGER(rcNumClasses)[0];
+    int cNumClasses = INTEGER(rcNumClasses)[0];
 
     SEXP rThisTree = NULL;
     int *aiSplitVar = NULL;
@@ -532,8 +531,8 @@ SEXP gbm_plot
     }
     for(iTree=0; iTree<cTrees; iTree++)
     {
-		for (iClass = 0; iClass < cNumClasses; iClass++)
-		{
+        for (iClass = 0; iClass < cNumClasses; iClass++)
+        {
             rThisTree     = VECTOR_ELT(rTrees,iClass + iTree*cNumClasses);
             aiSplitVar    = INTEGER(VECTOR_ELT(rThisTree,0));
             adSplitCode   = REAL   (VECTOR_ELT(rThisTree,1));
@@ -625,11 +624,11 @@ SEXP gbm_plot
                             adWeightStack[cStackNodes] = 
                                     dCurrentW-adWeightStack[cStackNodes-1];
                             cStackNodes++;
-                            }
+                        }
                     } // non-terminal node
                 } // while(cStackNodes > 0)
             } // iObs
-		} // iClass
+        } // iClass
     } // iTree
 
 Cleanup:
@@ -726,9 +725,8 @@ SEXP gbm_shrink_pred
    {
       while(iTree < INTEGER(racTrees)[iPredictionIter] * cNumClasses)
       {
-		  for (iClass = 0; iClass < cNumClasses; iClass++)
-		  {
-		  
+         for (iClass = 0; iClass < cNumClasses; iClass++)
+         {
               rThisTree     = VECTOR_ELT(rTrees,iTree);
               aiSplitVar    = INTEGER(VECTOR_ELT(rThisTree,0));
               adSplitCode   = REAL   (VECTOR_ELT(rThisTree,1));
@@ -839,9 +837,8 @@ SEXP gbm_shrink_pred
                  // add the shrunken prediction
                  adPredF[iObs + iClass * cRows] += dPred; // add the prediction
               } // iObs
-
-			  iTree++;
-		  } // iClass
+              iTree++;
+          } // iClass
       } // iTree
 
       PROTECT(radPredF = allocVector(REALSXP, cRows));
@@ -992,7 +989,7 @@ SEXP gbm_shrink_gradient
    // Allocate K-Class array
    if (cNumClasses > 1)
    {
-	   adProb = new double[cNumClasses];
+      adProb = new double[cNumClasses];
    }
 
    // initialize the predicted values
@@ -1012,155 +1009,154 @@ SEXP gbm_shrink_gradient
    for(iObs=0; iObs<cRows; iObs++)
    {
        for(iLambda=0; iLambda<length(radGradient); iLambda++)
-	   {
+       {
            adDfDLambda[iLambda] = 0.0;
-	   }
+       }
      
    	   for(iTree=0; iTree<INTEGER(rcTrees)[0]; iTree++)
-	   {
-           for (iClass = 0; iClass < cNumClasses; iClass++)
-		   { 
+         {
+            for (iClass = 0; iClass < cNumClasses; iClass++)
+            { 
 
-		       rThisTree     = VECTOR_ELT(rTrees,iClass + iTree * cNumClasses);
-  	           aiSplitVar    = INTEGER(VECTOR_ELT(rThisTree,0));
-   	           adSplitCode   = REAL   (VECTOR_ELT(rThisTree,1));
-   	           aiLeftNode    = INTEGER(VECTOR_ELT(rThisTree,2));
-   	           aiRightNode   = INTEGER(VECTOR_ELT(rThisTree,3));
-    	       aiMissingNode = INTEGER(VECTOR_ELT(rThisTree,4));
-    	       adNodeW       = REAL   (VECTOR_ELT(rThisTree,6));
-    	       adNodePred    = REAL   (VECTOR_ELT(rThisTree,7));
+               rThisTree     = VECTOR_ELT(rTrees,iClass + iTree * cNumClasses);
+               aiSplitVar    = INTEGER(VECTOR_ELT(rThisTree,0));
+               adSplitCode   = REAL   (VECTOR_ELT(rThisTree,1));
+               aiLeftNode    = INTEGER(VECTOR_ELT(rThisTree,2));
+               aiRightNode   = INTEGER(VECTOR_ELT(rThisTree,3));
+               aiMissingNode = INTEGER(VECTOR_ELT(rThisTree,4));
+               adNodeW       = REAL   (VECTOR_ELT(rThisTree,6));
+               adNodePred    = REAL   (VECTOR_ELT(rThisTree,7));
 
-    	       iCurrentNode = 0;
-   	  	       dPred = 0.0;
-   	   	       dLambdaProduct = 1.0;
-         
-       	       // reset for the new tree
-  	           cInPath = 0;
+               iCurrentNode = 0;
+               dPred = 0.0;
+               dLambdaProduct = 1.0;
 
-  	           while(aiSplitVar[iCurrentNode] != -1)
-			   {
-  	               dNewPredTerm = dLambdaProduct*
-    	                            (1-adLambda[aiSplitVar[iCurrentNode]])*
-   	          	                    adNodePred[iCurrentNode];
+       	      // reset for the new tree
+               cInPath = 0;
+
+               while(aiSplitVar[iCurrentNode] != -1)
+               {
+                  dNewPredTerm = dLambdaProduct*
+                                 (1-adLambda[aiSplitVar[iCurrentNode]])*
+                                 adNodePred[iCurrentNode];
             
-     	           // update prediction
-   	               dPred += dNewPredTerm;
+                  // update prediction
+   	            dPred += dNewPredTerm;
              
-   	               // update gradient
-   	               if(adLambda[aiSplitVar[iCurrentNode]]!=1.0)
-				   {
-    	                 adDfDLambda[aiSplitVar[iCurrentNode]] -= 
-   	                     dNewPredTerm/(1.0-adLambda[aiSplitVar[iCurrentNode]]);
-				   }
-   	               for(iNode=0; iNode<cInPath; iNode++)
-				   {
-				       if(adLambda[aiInPath[iNode]]!=0.0)
-					   {
-    	                   adDfDLambda[aiInPath[iNode]] += 
-    	                       dNewPredTerm/adLambda[aiInPath[iNode]];
-					   }
-				   } 
-                   aiInPath[cInPath] = aiSplitVar[iCurrentNode];
-                   cInPath++;
+   	            // update gradient
+   	            if(adLambda[aiSplitVar[iCurrentNode]]!=1.0)
+                  {
+                     adDfDLambda[aiSplitVar[iCurrentNode]] -= 
+                        dNewPredTerm/(1.0-adLambda[aiSplitVar[iCurrentNode]]);
+                  }
+   	            for(iNode=0; iNode<cInPath; iNode++)
+                  {
+                     if(adLambda[aiInPath[iNode]]!=0.0)
+                     {
+                        adDfDLambda[aiInPath[iNode]] += 
+                            dNewPredTerm/adLambda[aiInPath[iNode]];
+                     }
+                  } 
+                  aiInPath[cInPath] = aiSplitVar[iCurrentNode];
+                  cInPath++;
   
-                   dLambdaProduct *= adLambda[aiSplitVar[iCurrentNode]];
+                  dLambdaProduct *= adLambda[aiSplitVar[iCurrentNode]];
              
-                   dX = REAL(radX)[aiSplitVar[iCurrentNode]*cRows + iObs];
-                   // missing?
-                   if(ISNA(dX))
-				   {
+                  dX = REAL(radX)[aiSplitVar[iCurrentNode]*cRows + iObs];
+                  // missing?
+                  if(ISNA(dX))
+                  {
+                     iCurrentNode = aiMissingNode[iCurrentNode];
+                  }
+                  // continuous?
+                  else if(INTEGER(raiVarType)[aiSplitVar[iCurrentNode]] == 0)
+                  {
+                     if(dX < adSplitCode[iCurrentNode])
+                     {
+                        iCurrentNode = aiLeftNode[iCurrentNode];
+                     }
+                     else
+                     {
+                        iCurrentNode = aiRightNode[iCurrentNode];
+                     }
+                  } 
+                  else // categorical
+                  {
+                     iCatSplitIndicator = INTEGER(
+                     VECTOR_ELT(rCSplits,
+                                (int)adSplitCode[iCurrentNode]))[(int)dX];
+                     if(iCatSplitIndicator==-1)
+                     {
+                        iCurrentNode = aiLeftNode[iCurrentNode];
+                     }
+                     else if(iCatSplitIndicator==1)
+                     {
+                        iCurrentNode = aiRightNode[iCurrentNode];
+                     }
+                     else // categorical level not present in training
+                     {
                         iCurrentNode = aiMissingNode[iCurrentNode];
-				   }
-                   // continuous?
-                   else if(INTEGER(raiVarType)[aiSplitVar[iCurrentNode]] == 0)
-				   {
-                        if(dX < adSplitCode[iCurrentNode])
-						{
-                            iCurrentNode = aiLeftNode[iCurrentNode];
-						}
-                        else
-						{
-                            iCurrentNode = aiRightNode[iCurrentNode];
-						}
-				   } 
-                   else // categorical
-				   {
-                       iCatSplitIndicator = INTEGER(
-                       VECTOR_ELT(rCSplits,
-                                   (int)adSplitCode[iCurrentNode]))[(int)dX];
-                       if(iCatSplitIndicator==-1)
-					   {
-                           iCurrentNode = aiLeftNode[iCurrentNode];
-					   }
-                       else if(iCatSplitIndicator==1)
-					   {
-                           iCurrentNode = aiRightNode[iCurrentNode];
-					   }
-                       else // categorical level not present in training
-					   {
-                           iCurrentNode = aiMissingNode[iCurrentNode];
-					   }
-				   } 
-			   } // aiSplitVar[iCurrentNode] != -1
-         
+                     }
+                  } 
+               } // aiSplitVar[iCurrentNode] != -1
+
                // incorporate the terminal node
                dNewPredTerm = dLambdaProduct*adNodePred[iCurrentNode];
                dPred += dNewPredTerm;
                // update gradient
                for(iNode=0; iNode<cInPath; iNode++)
-			   {
+               {
                   if(adLambda[aiInPath[iNode]] != 0.0)
-				  {
-                      adDfDLambda[aiInPath[iNode]] += 
-                         dNewPredTerm/adLambda[aiInPath[iNode]];
-				  }
-			   }
+                  {
+                     adDfDLambda[aiInPath[iNode]] += 
+                        dNewPredTerm/adLambda[aiInPath[iNode]];
+                  }
+               }
 
                // add the prediction from tree iTree to prediction iObs
                REAL(radPredF)[iObs + iClass * cRows] += dPred; 
-		   } // iClass
-	   } // iTree
-	   
-	   // If kclass was used (i.e. numClasses > 1) then calculate the probabilities
-	   if (cNumClasses > 1)
-	   {
-		   dDenom = 0.0;
-		   for (iClass = 0; iClass < cNumClasses; iClass++)
-		   {
-			   adProb[iClass] = exp(REAL(radPredF)[iObs + iClass * cRows]);
-			   dDenom += adProb[iClass];
-		   }
+           } // iClass
+       } // iTree
+       
+       // If multinomial was used (i.e. numClasses > 1) then calculate the probabilities
+       if (cNumClasses > 1)
+       {
+           dDenom = 0.0;
+           for (iClass = 0; iClass < cNumClasses; iClass++)
+           {
+               adProb[iClass] = exp(REAL(radPredF)[iObs + iClass * cRows]);
+               dDenom += adProb[iClass];
+           }
 
-		   dDJDf = 0.0;
-		   for (iClass = 0; iClass < cNumClasses; iClass++)
-		   {
-			   adProb[iClass] /= dDenom;
+           dDJDf = 0.0;
+           for (iClass = 0; iClass < cNumClasses; iClass++)
+           {
+               adProb[iClass] /= dDenom;
 
                REAL(rdObjective)[0] += (adY[iObs + iClass * cRows] - adProb[iClass]) *
                                        (adY[iObs + iClass * cRows] - adProb[iClass]);
                dDJDf += -2*(adY[iObs + iClass * cRows] - adProb[iClass]);
-		   }
+           }
 
-		   REAL(rdObjective)[0] /= double(cNumClasses);
-		   dDJDf /= double(cNumClasses);
-	   }
-	   else
-	   {
-
+           REAL(rdObjective)[0] /= double(cNumClasses);
+           dDJDf /= double(cNumClasses);
+       }
+       else
+       {
            // DEBUG: need to make more general for other loss functions!
            REAL(rdObjective)[0] += (adY[iObs]-REAL(radPredF)[iObs])*
                                (adY[iObs]-REAL(radPredF)[iObs]);
            dDJDf = -2*(adY[iObs]-REAL(radPredF)[iObs]);
-	   }
+       }
       
        for(iLambda=0; iLambda<length(radLambda); iLambda++)  
-	   {
+       {
            if(adDfDLambda[iLambda] != 0.0)
-		   {
+           {
                REAL(radGradient)[iLambda] += 
                   dDJDf * adDfDLambda[iLambda]; // * adLambda[iLambda]*(1.0-adLambda[iLambda]);
-		   }
-	   }
+           }
+       }
    } // iObs
 
 Cleanup:
@@ -1176,8 +1172,8 @@ Cleanup:
    }
    if (adProb != NULL)
    {
-	   delete [] adProb;
-	   adProb = NULL;
+       delete [] adProb;
+       adProb = NULL;
    }
    
    UNPROTECT(1); // rResult

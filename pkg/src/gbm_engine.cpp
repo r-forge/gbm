@@ -30,7 +30,7 @@ CGBM::~CGBM()
 {
     if(adFadj != NULL)
     {
-		//Rprintf("Fadj_0 = %f\n", adFadj[0]);
+        //Rprintf("Fadj_0 = %f\n", adFadj[0]);
         delete [] adFadj;
         adFadj = NULL;
     }
@@ -77,7 +77,7 @@ GBMRESULT CGBM::Initialize
     double dBagFraction,
     unsigned long cDepth,
     unsigned long cMinObsInNode,
-	unsigned long cNumClasses
+    unsigned long cNumClasses
 )
 {
     GBMRESULT hr = GBM_OK;
@@ -126,11 +126,10 @@ GBMRESULT CGBM::Initialize
         goto Error;
     }
 
-	int ii;
-	for (ii=0;ii<(pData->cRows) * cNumClasses;ii++)
-	{
-		adFadj[ii] = 0.0;
-	}
+    for (i=0; i<(pData->cRows)*cNumClasses; i++)
+    {
+        adFadj[i] = 0.0;
+    }
 
     pNodeFactory = new CNodeFactory();
     if(pNodeFactory == NULL)
@@ -257,14 +256,14 @@ GBMRESULT CGBM::iterate
     double &dValidError,
     double &dOOBagImprove,
     int &cNodes,
-	int cNumClasses,
-	int cClassIdx
+    int cNumClasses,
+    int cClassIdx
 )
 {
     GBMRESULT hr = GBM_OK;
     unsigned long i = 0;
     unsigned long cBagged = 0;
-	int cIdxOff = cClassIdx * (cTrain + cValid);
+    int cIdxOff = cClassIdx * (cTrain + cValid);
  //   for(i=0; i < cTrain + cIdxOff; i++){ adF[i] = 0;}
     if(!fInitialized)
     {
@@ -279,22 +278,22 @@ GBMRESULT CGBM::iterate
     vecpTermNodes.assign(2*cDepth+1,NULL);
 
     // randomly assign observations to the Bag
-	if (cClassIdx == 0)
-	{
+    if (cClassIdx == 0)
+    {
         cBagged = 0;
         for(i=0; i<cTrain; i++)
-		{
+        {
             if(unif_rand()*(cTrain-i) < cTotalInBag-cBagged)
-			{
+            {
                 afInBag[i] = true;
                 cBagged++;
-			}
+            }
             else
-			{
+            {
                 afInBag[i] = false;
-			}
-		}
-	}
+            }
+        }
+    }
 
     #ifdef NOISY_DEBUG
     Rprintf("Compute working response\n");
@@ -308,7 +307,7 @@ GBMRESULT CGBM::iterate
                                        pData->adWeight,
                                        afInBag,
                                        cTrain,
-									   cIdxOff);
+                                       cIdxOff);
 
     if(GBM_FAILED(hr))
     {
@@ -323,11 +322,11 @@ GBMRESULT CGBM::iterate
     Rprintf("grow tree\n");
     #endif
     hr = ptreeTemp->grow(&(adZ[cIdxOff]), pData, &(pData->adWeight[cIdxOff]),
-		                 &(adFadj[cIdxOff]), cTrain, cTotalInBag, dLambda, cDepth,
+                         &(adFadj[cIdxOff]), cTrain, cTotalInBag, dLambda, cDepth,
                          cMinObsInNode, afInBag, aiNodeAssign, aNodeSearch,
-						 vecpTermNodes);
+                         vecpTermNodes);
  
-	if(GBM_FAILED(hr))
+    if(GBM_FAILED(hr))
     {
         goto Error;
     }
@@ -360,7 +359,7 @@ GBMRESULT CGBM::iterate
                                 cMinObsInNode,
                                 afInBag,
                                 adFadj,
-								cIdxOff);
+                                cIdxOff);
 
     if(GBM_FAILED(hr))
     {
@@ -378,8 +377,8 @@ GBMRESULT CGBM::iterate
     ptreeTemp->SetShrinkage(dLambda);
 
     if (cClassIdx == (cNumClasses - 1))
-	{
-    	dOOBagImprove = pDist->BagImprovement(pData->adY,
+    {
+        dOOBagImprove = pDist->BagImprovement(pData->adY,
                                               pData->adMisc,
                                               pData->adOffset,
                                               pData->adWeight,
@@ -388,12 +387,12 @@ GBMRESULT CGBM::iterate
                                               afInBag,
                                               dLambda,
                                               cTrain);
-	}
+    }
 
     // update the training predictions
     for(i=0; i < cTrain; i++)
     {
-		int iIdx = i + cIdxOff;
+        int iIdx = i + cIdxOff;
         adF[iIdx] += dLambda * adFadj[iIdx];
     }
 
@@ -403,7 +402,7 @@ GBMRESULT CGBM::iterate
                                   pData->adWeight,
                                   adF,
                                   cTrain,
-								  cIdxOff);
+                                  cIdxOff);
     //Rprintf( "dTrainError %f\n", dTrainError );
     // update the validation predictions
     hr = ptreeTemp->PredictValid(pData,cValid,&(adFadj[cIdxOff]));
@@ -416,13 +415,13 @@ GBMRESULT CGBM::iterate
     if(pData->fHasOffset)
     {
         dValidError = 
-    	pDist->Deviance(pData->adY,
+            pDist->Deviance(pData->adY,
                             pData->adMisc,
                             pData->adOffset,
                             pData->adWeight,
                             adF,
                             cValid,
-							cIdxOff + cTrain);
+                            cIdxOff + cTrain);
     }
     else
     {
@@ -432,7 +431,7 @@ GBMRESULT CGBM::iterate
                                       pData->adWeight,
                                       adF,
                                       cValid,
-									  cIdxOff + cTrain);
+                                      cIdxOff + cTrain);
     }
 
 Cleanup:

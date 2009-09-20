@@ -24,7 +24,7 @@ unsigned long gbm_setup
     int cTrees,
     int cDepth,
     int cMinObsInNode,
-	int cNumClasses,
+    int cNumClasses,
     double dShrinkage,
     double dBagFraction,
     int cTrain,
@@ -105,7 +105,7 @@ unsigned long gbm_setup
             goto Error;
         }
     }
-	else if(strncmp(pszFamily,"bisquare",2) == 0)
+    else if(strncmp(pszFamily,"bisquare",2) == 0)
     {
         pDist = new CBisquare(adMisc[0]);
         if(pDist==NULL)
@@ -114,7 +114,7 @@ unsigned long gbm_setup
             goto Error;
         }
     }
-	else if(strncmp(pszFamily,"tdist",2) == 0)
+    else if(strncmp(pszFamily,"tdist",2) == 0)
     {
         pDist = new CTDist(adMisc[0]);
         if(pDist==NULL)
@@ -123,9 +123,9 @@ unsigned long gbm_setup
             goto Error;
         }
     }
-	else if(strncmp(pszFamily,"kclass",2) == 0)
+    else if(strncmp(pszFamily,"multinomial",2) == 0)
     {
-        pDist = new CKClass(cNumClasses, cRows);
+        pDist = new CMultinomial(cNumClasses, cRows);
         if(pDist==NULL)
         {
             hr = GBM_OUTOFMEMORY;
@@ -159,11 +159,11 @@ GBMRESULT gbm_transfer_to_R
 (
     CGBM *pGBM,
     VEC_VEC_CATEGORIES &vecSplitCodes,
-	int *aiSplitVar,
+    int *aiSplitVar,
     double *adSplitPoint,
-	int *aiLeftNode,
-	int *aiRightNode,
-	int *aiMissingNode,
+    int *aiLeftNode,
+    int *aiRightNode,
+    int *aiMissingNode,
     double *adErrorReduction,
     double *adWeight,
     double *adPred,

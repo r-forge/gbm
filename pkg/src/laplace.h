@@ -5,7 +5,7 @@
 //  License:    GNU GPL (version 2 or later)
 //
 //  Contents:   laplace object
-//        	  
+// 
 //  Owner:      gregr@rand.org
 //
 //  History:    3/26/2001   gregr created
@@ -30,13 +30,13 @@ public:
 
     virtual ~CLaplace();
 
-	GBMRESULT UpdateParams(double *adF,
-	                       double *adOffset,
-						   double *adWeight,
-	                       unsigned long cLength)
-	{ 
-		return GBM_OK;
-	};
+   GBMRESULT UpdateParams(double *adF,
+                          double *adOffset,
+                          double *adWeight,
+                          unsigned long cLength)
+   { 
+      return GBM_OK;
+   };
 
     GBMRESULT ComputeWorkingResponse(double *adY,
                                    double *adMisc,
@@ -46,7 +46,7 @@ public:
                                    double *adWeight,
                                    bool *afInBag,
                                    unsigned long nTrain,
-	                               int cIdxOff);
+                                   int cIdxOff);
 
     GBMRESULT InitF(double *adY, 
                   double *adMisc,
@@ -68,7 +68,7 @@ public:
                               unsigned long cMinObsInNode,
                               bool *afInBag,
                               double *adFadj,
-	                          int cIdxOff);
+                              int cIdxOff);
 
     double Deviance(double *adY,
                     double *adMisc,
@@ -76,7 +76,7 @@ public:
                     double *adWeight,
                     double *adF,
                     unsigned long cLength,
-	                int cIdxOff);
+                    int cIdxOff);
 
     double BagImprovement(double *adY,
                           double *adMisc,
@@ -91,7 +91,7 @@ public:
 private:
     vector<double> vecd;
     vector<double>::iterator itMedian;
-	CLocationM *mpLocM;
+    CLocationM *mpLocM;
 };
 
 #endif // LAPLACGBM_H
