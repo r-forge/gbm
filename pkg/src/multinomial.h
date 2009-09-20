@@ -10,25 +10,25 @@
 //                    
 //------------------------------------------------------------------------------
 
-#ifndef KCLASSCGBM_H
-#define KCLASSCGBM_H
+#ifndef KMULTICGBM_H
+#define KMULTICGBM_H
 
 #include <algorithm>
 #include "distribution.h"
 #include "locationm.h"
 
-class CKClass : public CDistribution
+class CMultinomial : public CDistribution
 {
 
 public:
 
-    CKClass(int cNumClasses, int cRows);
+    CMultinomial(int cNumClasses, int cRows);
 
-    virtual ~CKClass();
+    virtual ~CMultinomial();
     GBMRESULT UpdateParams(double *adF,
-	                       double *adOffset,
-						   double *adWeight,
-	                       unsigned long cLength);
+                           double *adOffset,
+                           double *adWeight,
+                           unsigned long cLength);
 
     GBMRESULT ComputeWorkingResponse(double *adY,
                                      double *adMisc,
@@ -38,7 +38,7 @@ public:
                                      double *adWeight,
                                      bool *afInBag,
                                      unsigned long nTrain,
-	                                 int cIdxOff);
+                                     int cIdxOff);
 
     GBMRESULT InitF(double *adY, 
                     double *adMisc,
@@ -60,7 +60,7 @@ public:
                               unsigned long cMinObsInNode,
                               bool *afInBag,
                               double *adFadj,
-	                          int cIdxOff);
+                              int cIdxOff);
 
     double Deviance(double *adY,
                     double *adMisc,
@@ -68,7 +68,7 @@ public:
                     double *adWeight,
                     double *adF,
                     unsigned long cLength,
-	                int cIdxOff);
+                    int cIdxOff);
 
     double BagImprovement(double *adY,
                           double *adMisc,
@@ -81,12 +81,11 @@ public:
                           unsigned long nTrain);
 
 private:
-	int mcNumClasses;
-	int mcRows;
-	double *madProb; 
+   unsigned long mcNumClasses;
+   unsigned long mcRows;
+   double *madProb; 
 };
 
-#endif // KCLASSCGBM_H
-
+#endif // KMULTICGBM_H
 
 
