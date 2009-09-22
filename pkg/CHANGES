@@ -1,4 +1,27 @@
+Changes in version 2.0
 
+Lots of new features added so it warrants a change to the first digit
+of the version number.
+
+Major changes:
+- Several new distributions are now available thanks to Harry Southworth 
+and Daniel Edwards: multinomial, bisquare, and tdist.
+
+- The gbm package is now managed on R-Forge by Greg Ridgeway and 
+Harry Southworth. Visit http://r-forge.r-project.org/projects/gbm/
+to get the latest or to contribute to the package
+
+Minor changes:
+- the "quantile" distribution now handles weighted data
+
+- relative.influence changed to give names to the returned vector
+
+- Added print.gbm and show.gbm. These give basic summaries of the fitted 
+model
+
+- Added support functions estBisqParam() (for the bisquare) and 
+reconstructGBMdata() to facilitate reconstituting the data for
+certain plots and summaries
 
 
 Changes in version 1.6

@@ -21,9 +21,8 @@
   that was used, and the total number of iterations.
   
   If cross-validation was performed, the 'best' number of trees as
-  estimated
-   by cross-validation error is
-  dispalyed. If a test set was used, the 'best' number
+  estimated by cross-validation error is displayed. If a test set 
+  was used, the 'best' number
   of trees as estimated by the test set error is displayed.
   
   The number of available predictors, and the number of those having
@@ -41,7 +40,8 @@
   
   If the 'distribution' was specified as gaussian, laplace, quantile,
   bisquare or t-distribution, a summary of the residuals is displayed.
-  The residuals are for the training data with the model at the 'best' number of trees, as
+  The residuals are for the training data with the model at the 'best' 
+  number of trees, as
   described above, or the maximum number of trees if the 'best' cannot
   be computed.
   
@@ -53,12 +53,12 @@
 \seealso{ \code{\link{gbm}} }
 \examples{
 data( iris )
-iris.mod <- gbm( Species ~ ., distribution="kclass", data=iris,
-                 n.trees=2000, shrinkage=.01, cv.folds=5 )
+iris.mod <- gbm( Species ~ ., distribution="multinomial", data=iris,
+                 n.trees=2000, shrinkage=0.01, cv.folds=5 )
 iris.mod
 data( lung )
 lung.mod <- gbm( Surv(time, status) ~ ., distribution="coxph", data=lung,
-                 n.trees=2000, shrinkage=.01, cv.folds=5 )
+                 n.trees=2000, shrinkage=0.01, cv.folds=5 )
 lung.mod
 }
 \keyword{models}

@@ -8,6 +8,7 @@ interact.gbm            Estimate the strength of interaction effects
 plot.gbm                Marginal plots of fitted gbm objects
 predict.gbm             Predict method for GBM Model Fits
 pretty.gbm.tree         Print gbm tree components
+print.gbm               Print model summary
 quantile.rug            Quantile rug plot
 relative.influence      Methods for estimating relative influence
 shrink.gbm              L1 shrinkage of the predictor variables in a

@@ -23,27 +23,29 @@ GBMRESULT CHuberized::ComputeWorkingResponse
     double *adWeight,
     bool *afInBag,
     unsigned long nTrain,
-	int cIdxOff
+    int cIdxOff
 )
 {
-    unsigned long i = 0;
-    double dProb = 0.0;
-    double dF = 0.0;
-
-    for(i=0; i<nTrain; i++)
-    {
-        dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
-          if( (2*adY[i]-1)*dF < -1){
-              adZ[i] = -4 * (2*adY[i]-1);
-          }
-          else if ( 1 - (2*adY[i]-1)*dF < 0 ){
-             adZ[i] = 0;
-          }
-          else{
-              adZ[i] = -2 * (2*adY[i]-1) * ( 1 - (2*adY[i]-1)*dF );
-          }
-    }
-    return GBM_OK;
+   unsigned long i = 0;
+   double dF = 0.0;
+   
+   for(i=0; i<nTrain; i++)
+   {
+      dF = adF[i] + ((adOffset==NULL) ? 0.0 : adOffset[i]);
+      if( (2*adY[i]-1)*dF < -1)
+      {
+         adZ[i] = -4 * (2*adY[i]-1);
+      }
+      else if ( 1 - (2*adY[i]-1)*dF < 0 )
+      {
+         adZ[i] = 0;
+      }
+      else
+      {
+         adZ[i] = -2 * (2*adY[i]-1) * ( 1 - (2*adY[i]-1)*dF );
+      }
+   }
+   return GBM_OK;
 }
 
 GBMRESULT CHuberized::InitF
@@ -93,14 +95,14 @@ double CHuberized::Deviance
 {
    unsigned long i=0;
    double dL = 0.0;
-   double dF = 0.0; // unused?
+   double dF = 0.0;
    double dW = 0.0;
 
    if(adOffset==NULL)
    {
       for(i=cIdxOff; i<cLength+cIdxOff; i++)
       {
-	     if ( (2*adY[i]-1)*adF[i] < -1 )
+        if ( (2*adY[i]-1)*adF[i] < -1 )
          {
             dL += -adWeight[i]*4*(2*adY[i]-1)*adF[i];
             dW += adWeight[i];
@@ -114,24 +116,26 @@ double CHuberized::Deviance
             dW += adWeight[i];
          }
       }
-   } // close if (adOffset...
+   } // close if (adOffset==NULL)
    else
    {
       for(i=cIdxOff; i<cLength+cIdxOff; i++)
       {
+         dF = adOffset[i]+adF[i];
          if ( (2*adY[i]-1)*adF[i] < -1 )
          {
-            dL += -adWeight[i]*4*(2*adY[i]-1)*(adOffset[i]+adF[i]);
+            dL += -adWeight[i]*4*(2*adY[i]-1)*dF;
             dW += adWeight[i];
          }
-         else if ( 1 - (2*adY[i]-1)*adF[i] < 0 )
+         else if ( 1 - (2*adY[i]-1)*dF < 0 )
          {
             dL += 0;
             dW += adWeight[i];
          }
          else
          {
-            dL += adWeight[i] * ( 1 - (2*adY[i]-1)*(adOffset[i]+adF[i]) ) * ( 1 - (2*adY[i]-1)*(adOffset[i]+adF[i]) );
+            dL += adWeight[i] * ( 1 - (2*adY[i]-1)*dF ) * 
+                                ( 1 - (2*adY[i]-1)*dF );
             dW += adWeight[i];
          }
       } // close for(
@@ -156,7 +160,7 @@ GBMRESULT CHuberized::FitBestConstant
     unsigned long cMinObsInNode,
     bool *afInBag,
     double *adFadj,
-	int cIdxOff
+   int cIdxOff
 )
 {
     GBMRESULT hr = GBM_OK;
@@ -256,5 +260,3 @@ double CHuberized::BagImprovement
 
     return dReturnValue/dW;
 }
-
-

@@ -51,7 +51,6 @@ GBMRESULT CLaplace::ComputeWorkingResponse
 
 
 
-// DEBUG: needs weighted median
 GBMRESULT CLaplace::InitF
 (
     double *adY,
@@ -62,6 +61,8 @@ GBMRESULT CLaplace::InitF
     unsigned long cLength
 )
 {
+    GBMRESULT hr = GBM_OK;
+
     double dOffset = 0.0;
     unsigned long ii = 0;
     int nLength = int(cLength);
@@ -226,7 +227,3 @@ double CLaplace::BagImprovement
 
     return dReturnValue/dW;
 }
-
-
-
-

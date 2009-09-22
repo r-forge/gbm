@@ -1,7 +1,6 @@
 # Create some output to test the new print function and
 # to be comparable with any future changes to gbm.
 
-library( gbm )
 library( MASS )
 
 data( birthwt )
@@ -22,7 +21,7 @@ bwt <- birthwt
 bwt <- bwt[ sample( 1:nrow( bwt ) ),]
 aMod <- gbm( low ~ ., data=bwt, distribution="adaboost",
              n.trees=1000, shrinkage=.01, cv.folds=10,
-	     train.fraction=.9 )
+        train.fraction=.9 )
 aMod
 
 cMod <- gbm( Surv( stime, status ) ~ treat + age + Karn + diag.time + cell + prior,
@@ -49,22 +48,21 @@ biMod
 
 tMod <- gbm( log(perf) ~ ., data=mycpus, distribution="tdist",
              cv.folds=5, n.trees=1000, shrinkage=.01, 
-	     interaction.depth= 3)
+        interaction.depth= 3)
 tMod
 
 lMod <- gbm( log(perf) ~ ., data=mycpus, distribution="laplace",
              cv.folds=5, n.trees=1000, shrinkage=.01, 
-	     interaction.depth= 3)
+        interaction.depth= 3)
 lMod
 
 qMod <- gbm( log(perf) ~ ., data=mycpus,
              distribution=list(name="quantile", alpha=.7 ),
              cv.folds=5, n.trees=1000, shrinkage=.01, 
-	     interaction.depth= 3)
+        interaction.depth= 3)
 qMod
 
 pMod <- gbm( Freq ~ ., data=housing , distribution="poisson",
              n.trees=1000, cv.folds=5 , shrinkage=.01,
-	     interaction.depth = 3)
+        interaction.depth = 3)
 pMod
-

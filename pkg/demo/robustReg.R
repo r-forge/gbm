@@ -1,9 +1,7 @@
 library( MASS )
-library( gbm )
 
 set.seed( 20090415 )
 
-pdf( "robustReg.pdf" )
 
 x <- mvrnorm( 100, mu=rep( 0, 5 ) , Sigma=diag( rep( 1, 5 ) ) )
 r <- rnorm( 100 )

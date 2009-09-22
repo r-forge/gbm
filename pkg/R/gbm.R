@@ -1,31 +1,7 @@
 # TODO
-# 2. Run all the examples in the help files.
 # 4. Document the tests of the new functionality.
 # 5. Document the tests comparing the new build to the old for the old methods.
 # 6. Test gbm.more with bisquare and t-dist (ensure Misc gets used properly).
-
-# Changes to gbm, April 2009, Harry Southworth:
-
-# Regression with bisquare and t-distribution loss functions
-# added. Multinomial classification added. Code written by
-# Daniel Edwards with input from Harry Southworth.
-# R functions modified to accomodate these.
-
-# XXX relative.influence changed to give names to the returned vector
-# XXX Added print.gbm and show.gbm
-# XXX Added estBisqParam.
-# XXX added reconstructGBMdata
-
-# Changes to previous version of C++:
-# For some reason, Daniel changed a load of "int"s
-# into "long"s. Apparently, some older C compilers will
-# just convert them, and it all compiled for S+ on Windows,
-# but the version of g++ that I
-# have won't. So I changed them all back. Also, g++
-# complained about deprecated use of "char *." Changed
-# to "const char *" in locationm.cpp & .h
-# The compiler complains a little when building for Windows, but no errors.
-
 
 .First.lib <- function(lib, pkg)
 {
@@ -52,9 +28,9 @@ reconstructGBMdata <- function(x)
    } else 
    if (x$distribution$name=="multinomial")
    {
-      y <- matrix(x$data$y, ncol=length(x$classes), byrow=FALSE)
+      y <- matrix(x$data$y, ncol=x$num.classes, byrow=FALSE)
       yn <- apply(y, 1, function(z,nc) {(1:nc)[z == 1]}, 
-                  nc = ncol(y))
+                  nc = x$num.classes)
       y <- factor(yn, labels=x$classes)
       xdat <- matrix(x$data$x, ncol=ncol(x$data$x.order), byrow=FALSE)
       d <- data.frame(y, xdat)
@@ -106,85 +82,93 @@ estBisqParam <- function(x=0.85)
    return(Misc)
 }
 
-print.gbm <- function( x, ... ){
+print.gbm <- function(x, ... )
+{
    print( x$call )
    cat( paste( "A gradient boosted model with", x$distribution$name, "loss function.\n" ))
    cat( paste( length( x$train.error ), "iterations were performed.\n" ) )
-        best <- length( x$train.error )
-   if ( !is.null( x$cv.error ) ){
+   best <- length( x$train.error )
+   if ( !is.null( x$cv.error ) )
+   {
       best <- gbm.perf( x, plot.it = FALSE, method="cv" )
       cat( paste("The best cross-validation iteration was ", best, ".\n", sep = "" ) )
    }
-   if ( x$train.fraction < 1 ) {
+   if ( x$train.fraction < 1 ) 
+   {
       best <- gbm.perf( x, plot.it = FALSE, method="test" )
       cat( paste("The best test-set iteration was ", best, ".\n", sep = "" ) )
    }
-   if ( is.null( best ) ){
+   if ( is.null( best ) )
+   {
       best <- length( x$train.error )
    }
    ri <- relative.influence( x, n.trees=best )
    cat( "There were", length( x$var.names ), "predictors of which",
               sum( ri > 0 ), "had non-zero influence.\n" )
    
-           d <- reconstructGBMdata( x )
-      if (x$distribution$name == "multinomial"){
-         n.class <- x$num.classes
-
-         yn <- as.numeric( d[, x$response.name ] )
-
-              p <- predict( x, n.trees=best , type = "response", newdata=d )
-              p <- apply( p, 1, function( x , labels ){ labels[ x == max( x ) ] },
-                     labels = colnames( p )
-         )
-              p <- as.numeric(as.factor( p ))
-         r <- yn
-
-         conf.mat <- matrix(table(c(r + n.class * p, (n.class + (1:(n.class^2))))), 
-                            nrow = n.class)
-         conf.mat <- conf.mat - 1
-
-         pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
-
-         conf.mat <- cbind(conf.mat, round(100*diag(conf.mat)/rowSums(conf.mat),2))
-         dimnames(conf.mat) <- list(x$classes, c(x$classes, "Pred. Acc."))
-
-         cat("\nConfusion matrix:\n")
-         print(conf.mat)
-
-         cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
-      }
-      else if (x$distribution$name == "bernoulli" || x$distribution$name == "adaboost"){
-
-         p <- predict( x , newdata=d, n.tree=best , type = "response")
-         p <- ifelse( p < .5, 0, 1 )
+   d <- reconstructGBMdata( x )
+   if (x$distribution$name == "multinomial")
+   {
+      n.class <- x$num.classes
+   
+      yn <- as.numeric( d[, x$response.name ] )
+   
+      p <- predict( x, n.trees=best , type = "response", newdata=d )
+      p <- apply( p, 1, function( x , labels ){ labels[ x == max( x ) ] },
+                 labels = colnames( p ))
+      p <- as.numeric(as.factor( p ))
+      r <- yn
+   
+      conf.mat <- matrix(table(c(r + n.class * p, (n.class + (1:(n.class^2))))), 
+                         nrow = n.class)
+      conf.mat <- conf.mat - 1
+   
+      pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
+   
+      conf.mat <- cbind(conf.mat, round(100*diag(conf.mat)/rowSums(conf.mat),2))
+      dimnames(conf.mat) <- list(x$classes, c(x$classes, "Pred. Acc."))
+   
+      cat("\nConfusion matrix:\n")
+      print(conf.mat)
+   
+      cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
+   }
+   else if (x$distribution$name == "bernoulli" || x$distribution$name == "adaboost")
+   {
+      p <- predict( x , newdata=d, n.tree=best , type = "response")
+      p <- ifelse( p < .5, 0, 1 )
          
-         conf.mat <- matrix( table( c( d[,x$response.name] + 2 * p , 0:3 )), ncol=2 )
-         conf.mat <- conf.mat - 1
+      conf.mat <- matrix( table( c( d[,x$response.name] + 2 * p , 0:3 )), ncol=2 )
+      conf.mat <- conf.mat - 1
 
-         pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
+      pred.acc <- round(100 * sum(diag(conf.mat)) / sum(conf.mat),2)
 
-         conf.mat <- cbind(conf.mat,  round(100*diag(conf.mat)/rowSums(conf.mat),2))
-         dimnames(conf.mat) <- list(c("0","1"), c("0", "1", "Pred. Acc."))
+      conf.mat <- cbind(conf.mat,  round(100*diag(conf.mat)/rowSums(conf.mat),2))
+      dimnames(conf.mat) <- list(c("0","1"), c("0", "1", "Pred. Acc."))
 
-         cat("\nConfusion matrix:\n")
-         print(conf.mat)
+      cat("\nConfusion matrix:\n")
+      print(conf.mat)
 
-         cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
+      cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
+   }
+   else if (x$distribution$name %in% 
+            c("gaussian", "laplace", "poisson", "quantile", "bisquare", "tdist" ) )
+   {
+      r <- d[, 1] - predict( x, type="response", newdata=d, n.tree=best )
+      if ( x$distribution$name == "poisson" )
+      {
+         cat( "Summary of response residuals:\n" )
       }
-      else if ( x$distribution$name %in% c( "gaussian", "laplace", "poisson", "quantile", "bisquare", "tdist" ) ){
-              r <- d[, 1] - predict( x, type="response", newdata=d, n.tree=best )
-              if ( x$distribution$name == "poisson" ){
-           cat( "Summary of response residuals:\n" )
-         }
-         else {
-            cat( "Summary of residuals:\n" )
-         }
-         print( quantile( r ) )
-         cat( "\n" )
+      else {
+         cat( "Summary of residuals:\n" )
       }
+      print( quantile( r ) )
+      cat( "\n" )
+   }
 
    invisible()
 }
+
 show.gbm <- print.gbm
 
 predict.gbm <- function(object,newdata,n.trees,
@@ -247,16 +231,11 @@ predict.gbm <- function(object,newdata,n.trees,
    }
    i.ntree.order <- order(n.trees)
       
-   if ( object$distribution$name == "multinomial" ){
-      n.class <- object$num.classes
-   }
-   else { n.class <- 1 }
-
    predF <- .Call("gbm_pred",
                   X=as.double(x),
                   cRows=as.integer(cRows),
                   cCols=as.integer(cCols),
-                  cNumClasses = as.integer(n.class),
+                  cNumClasses = as.integer(object$num.classes),
                   n.trees=as.integer(n.trees[i.ntree.order]),
                   initF=object$initF,
                   trees=object$trees,
@@ -265,11 +244,11 @@ predict.gbm <- function(object,newdata,n.trees,
                   single.tree = as.integer(single.tree),
                   PACKAGE = "gbm")
 
-   if((length(n.trees) > 1) || (n.class > 1))
+   if((length(n.trees) > 1) || (object$num.classes > 1))
    {
       if(object$distribution$name=="multinomial")
       {
-         predF <- array(predF, dim=c(cRows,n.class,length(n.trees)))
+         predF <- array(predF, dim=c(cRows,object$num.classes,length(n.trees)))
          dimnames(predF) <- list(NULL, object$classes, n.trees)
          predF[,,i.ntree.order] <- predF
       } else 
@@ -343,12 +322,6 @@ plot.gbm <- function(x,
       }
    }
 
-   n.class <- 1
-   if (x$distribution$name == "multinomial")
-   {
-      n.class <- x$num.classes
-   }
-
    if((min(i.var)<1) || (max(i.var)>length(x$var.names)))
    {
       warning("i.var must be between 1 and ",length(x$var.names))
@@ -393,7 +366,7 @@ plot.gbm <- function(x,
                 X = as.double(data.matrix(X)),
                 cRows = as.integer(nrow(X)),
                 cCols = as.integer(ncol(X)),
-                n.class = as.integer(n.class),
+                n.class = as.integer(x$num.classes),
                 i.var = as.integer(i.var-1),
                 n.trees = as.integer(n.trees) ,
                 initF = as.double(x$initF),
@@ -405,7 +378,7 @@ plot.gbm <- function(x,
    if (x$distribution$name=="multinomial")
    {
       ## Put result into matrix form
-      X$y <- matrix(y, ncol = n.class)
+      X$y <- matrix(y, ncol = x$num.classes)
       colnames(X$y) <- x$classes
       
       ## Use class probabilities
@@ -781,11 +754,6 @@ gbm.more <- function(object,
          Misc <- object$distribution$df
       }
 
-      nClass <- 1
-      if (x$distribution$name == "multinomial"){
-         nClass <- x$num.classes
-      }
-
       # create index upfront... subtract one for 0 based order
       x.order <- apply(x[1:object$nTrain,,drop=FALSE],2,order,na.last=FALSE)-1
       x <- data.matrix(x)
@@ -800,7 +768,6 @@ gbm.more <- function(object,
       offset      <- object$data$offset
       Misc        <- object$data$Misc
       w           <- object$data$w
-      nClass      <- object$n.classes
       cRows <- length(y)
       cCols <- length(x)/cRows
       if(object$distribution$name == "coxph")
@@ -831,7 +798,7 @@ gbm.more <- function(object,
                     n.trees = as.integer(n.new.trees),
                     interaction.depth = as.integer(object$interaction.depth),
                     n.minobsinnode = as.integer(object$n.minobsinnode),
-                    n.classes = as.integer(nClass),
+                    n.classes = as.integer(object$num.classes),
                     shrinkage = as.double(object$shrinkage),
                     bag.fraction = as.double(object$bag.fraction),
                     nTrain = as.integer(object$nTrain),
@@ -1000,7 +967,6 @@ gbm.fit <- function(x,y,
    }
 
    nTrain <- as.integer(train.fraction*cRows)
-
    nClass <- 1
 
    if(is.character(distribution)) distribution <- list(name=distribution)
@@ -1036,10 +1002,6 @@ gbm.fit <- function(x,y,
    {
       stop("This version of AdaBoost requires the response to be in {0,1}")
    }
-   #if((distribution$name == "laplace") && (length(unique(w)) > 1))
-   #{
-   #   stop("This version of gbm for the Laplace loss lacks a weighted median. For now the weights must be constant.")
-   #}
    if(distribution$name == "quantile")
    {
       if(length(unique(w)) > 1)
@@ -1102,8 +1064,8 @@ gbm.fit <- function(x,y,
    }
    if (distribution$name == "multinomial")
    {
-     ## Ensure that the training set contains all classes
-     classes <- attr(factor(y), "levels")
+      ## Ensure that the training set contains all classes
+      classes <- attr(factor(y), "levels")
       nClass <- length(classes)
 
       if (nClass > nTrain){
@@ -1112,9 +1074,9 @@ gbm.fit <- function(x,y,
                     sep = ""))
       }
    
-      f <- function(a,x){
-         min((1:length(x))[x==a])
-      }
+  #    f <- function(a,x){
+  #       min((1:length(x))[x==a])
+  #    }
 
       new.idx <- as.vector(sapply(classes, function(a,x){ min((1:length(x))[x==a]) }, y))
 
@@ -1191,23 +1153,11 @@ gbm.fit <- function(x,y,
    names(gbm.obj) <- c("initF","fit","train.error","valid.error",
                        "oobag.improve","trees","c.splits")
 
-   ## If K-Classification is used then split the fit and tree components
-   if (distribution$name == "multinomial"){
-          gbm.obj$fit <- matrix(gbm.obj$fit, ncol = nClass)
-          dimnames(gbm.obj$fit)[[2]] <- classes
-       gbm.obj$classes <- classes
-          gbm.obj$num.classes <- nClass
-          
-      ## Also get the class estimators
-      exp.f <- exp(gbm.obj$fit)
-      denom <- matrix(rep(rowSums(exp.f), nClass), ncol = nClass)
-      gbm.obj$estimator <- exp.f/denom
-   }
-
    gbm.obj$bag.fraction <- bag.fraction
    gbm.obj$distribution <- distribution
    gbm.obj$interaction.depth <- interaction.depth
    gbm.obj$n.minobsinnode <- n.minobsinnode
+   gbm.obj$num.classes <- nClass
    gbm.obj$n.trees <- length(gbm.obj$trees) / nClass
    gbm.obj$nTrain <- nTrain
    gbm.obj$response.name <- response.name
@@ -1223,6 +1173,17 @@ gbm.fit <- function(x,y,
    if(distribution$name == "coxph")
    {
       gbm.obj$fit[i.timeorder] <- gbm.obj$fit
+   }
+   ## If K-Classification is used then split the fit and tree components
+   if (distribution$name == "multinomial"){
+      gbm.obj$fit <- matrix(gbm.obj$fit, ncol = nClass)
+      dimnames(gbm.obj$fit)[[2]] <- classes
+      gbm.obj$classes <- classes
+          
+      ## Also get the class estimators
+      exp.f <- exp(gbm.obj$fit)
+      denom <- matrix(rep(rowSums(exp.f), nClass), ncol = nClass)
+      gbm.obj$estimator <- exp.f/denom
    }
 
    if(keep.data)
@@ -1272,7 +1233,7 @@ gbm <- function(formula = formula(data),
                 cv.folds=0,
                 keep.data = TRUE,
                 verbose = TRUE,
-      class.stratify.cv )
+                class.stratify.cv )
 {
    theCall <- match.call()
 
@@ -1294,8 +1255,8 @@ gbm <- function(formula = formula(data),
      else if ( is.factor( y ) ){ distribution <- "multinomial" }
      else{
         distribution <- "bisquare"
-        cat( paste( "Distribution not specified, assuming", distribution, "...\n" ) )
      }
+     cat( paste( "Distribution not specified, assuming", distribution, "...\n" ) )
    }
 
 #   if ( length( distribution ) == 1 && distribution != "multinomial" ){
@@ -1972,11 +1933,6 @@ interact.gbm <- function(x, data, i.var = 1, n.trees = x$n.trees)
         n.trees <- x$n.trees
     }
 
-    n.class <- 1
-    if (x$distribution$name=="multinomial") {
-        n.class <- x$num.classes
-    }    
-
     unique.tab <- function(z,i.var)
     {
         a <- unique(z[,i.var,drop=FALSE])
@@ -2006,7 +1962,7 @@ interact.gbm <- function(x, data, i.var = 1, n.trees = x$n.trees)
                         X = as.double(data.matrix(FF[[j]]$Z)), 
                         cRows = as.integer(nrow(FF[[j]]$Z)), 
                         cCols = as.integer(ncol(FF[[j]]$Z)), 
-                        n.class = as.integer(n.class),
+                        n.class = as.integer(x$num.classes),
                         i.var = as.integer(i.var[a[[j]]] - 1),
                         n.trees = as.integer(n.trees), 
                         initF = as.double(x$initF), 
@@ -2042,4 +1998,3 @@ interact.gbm <- function(x, data, i.var = 1, n.trees = x$n.trees)
    }
    return(sqrt(H))
 }
-
