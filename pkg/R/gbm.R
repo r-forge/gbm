@@ -711,6 +711,7 @@ gbm.more <- function(object,
    else if(is.null(object$data))
    {
       m <- eval(object$m, parent.frame())
+
       Terms <- attr(m, "terms")
       a <- attributes(Terms)
 
@@ -845,9 +846,9 @@ gbm.more <- function(object,
    }
    else
    {
-      gbm.obj$data <- NULL
-      gbm.obj$m <- object$m
+      gbm.obj$data <- NULL   
    }
+   gbm.obj$m <- object$m
    gbm.obj$call <- theCall
 
    class(gbm.obj) <- "gbm"
@@ -1244,6 +1245,7 @@ gbm <- function(formula = formula(data),
    mf$drop.unused.levels <- TRUE
    mf$na.action <- na.pass
    mf[[1]] <- as.name("model.frame")
+   m <- mf
    mf <- eval(mf, parent.frame())
    Terms <- attr(mf, "terms")
 
@@ -1354,6 +1356,7 @@ gbm <- function(formula = formula(data),
    gbm.obj$cv.error <- cv.error
    gbm.obj$cv.folds <- cv.folds
    gbm.obj$call <- theCall
+   gbm.obj$m <- m
 
    return(gbm.obj)
 }
