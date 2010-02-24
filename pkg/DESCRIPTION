@@ -1,6 +1,6 @@
 Package: gbm
-Version: 2.0-1
-Date: 2009-09-30
+Version: 2.0-2
+Date: 2010-02-24
 Title: Generalized Boosted Regression Models
 Author: Greg Ridgeway <gregr@rand.org> with contributions from others
 Maintainer: Greg Ridgeway <gregr@rand.org>
@@ -12,5 +12,5 @@ Description: This package implements extensions
   quantile regression, logistic, multinomial logistic, Poisson,
   Cox proportional hazards partial likelihood, and the AdaBoost
   exponential loss.
-License: GPL (version 2 or newer)
-URL: http://r-forge.r-project.org/projects/gbm/ 
+License: GPL (>= 2)
+URL: http://r-forge.r-project.org/projects/gbm/

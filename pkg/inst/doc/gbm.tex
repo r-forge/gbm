@@ -360,7 +360,7 @@ Gradient & $z_i=y_i - \exp(f(\mathbf{x}_i))$ \\
 Terminal node estimates & $\displaystyle \log\frac{\sum w_iy_i}{\sum w_i\exp(f(\mathbf{x}_i))}$
 \end{tabular}
 
-The Poisson class includes special safeguards so that the most extreme predicted values are $e^{-19}$ and $e^{+19}$. This
+The Poisson class includes special safeguards so that the most extreme predicted values are $e^{-19}$ and $e^{+19}$. This behavior is consistent with \texttt{glm()}.
 
 \begin{thebibliography}{77}     % start the bibliography
 

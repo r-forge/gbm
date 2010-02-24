@@ -910,6 +910,10 @@ gbm.fit <- function(x,y,
    {
       stop("interaction.depth must be at least 1.")
    }
+   if(interaction.depth>49)
+   {
+      stop("interaction.depth must be less than 50. You should also ask yourself why you want such large interaction terms. A value between 1 and 5 should be sufficient for most applications.")
+   }
 
    if(length(w)==0) w <- rep(1, cRows)
    else if(any(w < 0)) stop("negative weights not allowed")
@@ -1234,7 +1238,7 @@ gbm <- function(formula = formula(data),
                 cv.folds=0,
                 keep.data = TRUE,
                 verbose = TRUE,
-                class.stratify.cv )
+                class.stratify.cv)
 {
    theCall <- match.call()
 
@@ -1260,7 +1264,7 @@ gbm <- function(formula = formula(data),
      }
      cat( paste( "Distribution not specified, assuming", distribution, "...\n" ) )
    }
-
+   
 #   if ( length( distribution ) == 1 && distribution != "multinomial" ){
 #      y <- model.response(mf, "numeric")
 #   }
@@ -1293,18 +1297,19 @@ gbm <- function(formula = formula(data),
    if(cv.folds>1)
    {
       if(distribution$name=="coxph") i.train <- 1:floor(train.fraction*nrow(y))
-      else                      i.train <- 1:floor(train.fraction*length(y))
+      else                           i.train <- 1:floor(train.fraction*length(y))
 
-      if ( distribution$name %in% c( "bernoulli", "multinomial" ) & class.stratify.cv ){
+      if ( distribution$name %in% c( "bernoulli", "multinomial" ) & class.stratify.cv )
+      {
            nc <- table(y[i.train]) # Number in each class
            uc <- names(nc)
-      if ( min( nc ) < cv.folds ){
+           if ( min( nc ) < cv.folds ){
               stop( paste("The smallest class has only", min(nc), "objects in the training set. Can't do", cv.folds, "fold cross-validation."))
-      }
-      cv.group <- vector( length = length( i.train ) )
-     for ( i in 1:length( uc ) ){
-         cv.group[ y[i.train] == uc[i] ] <- sample( rep( 1:cv.folds , length = nc[i] ) )
-          }
+           }
+           cv.group <- vector( length = length( i.train ) )
+           for ( i in 1:length( uc ) ){
+              cv.group[ y[i.train] == uc[i] ] <- sample( rep( 1:cv.folds , length = nc[i] ) )
+           }
       }
       else {
          cv.group <- sample(rep(1:cv.folds, length=length(i.train)))

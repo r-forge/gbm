@@ -40,7 +40,9 @@ a bug. That's been fixed (Thanks to Trevor Hastie for catching this)
 
 - plot.gbm has a new argument, type, defaulting to "link". For bernoulli, multinomial, poisson, "response" is allowed.
 
+- models with large interactions (>24) were using up all the terminal nodes in the stack. The stack has been increased to 101 nodes allowing interaction.depth up to 49. A more graceful error is now issued if interaction.depth exceeds 49. (Thanks to Tom Dietterich for catching this).
 
+- gbm now uses the R macro R_NaN in the C++ code rather than NAN, which would not compile on Sun OS.
 
 Changes in version 1.6
 
