@@ -227,7 +227,7 @@ GBMRESULT CCoxPH::FitBestConstant
         for(k=0; k<K-1; k++)
         {
             matH.getvalue(k,m,dTemp,fTemp);
-            if(!R_finite(dTemp)) // occurs if matH was not invertible
+            if(!R_FINITE(dTemp)) // occurs if matH was not invertible
             {
                 vecpTermNodes[veciK2Node[k]]->dPrediction = 0.0;
                 break;
