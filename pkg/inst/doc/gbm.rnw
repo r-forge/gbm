@@ -1,15 +1,15 @@
 % setwd("c:/dev/gbm/inst/doc") % Sweave("gbm.rnw"); system("texify gbm.tex"); system("c:\\MiKTeX\\texmf\\miktex\\bin\\yap.exe gbm.dvi",wait=FALSE)
 
-\documentclass{article} 
-\bibliographystyle{plain} 
-\usepackage[active]{srcltx} 
-\newcommand{\EV}{\mathrm{E}} 
-\newcommand{\Var}{\mathrm{Var}} 
+\documentclass{article}
+\bibliographystyle{plain}
+\usepackage[active]{srcltx}
+\newcommand{\EV}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
 \newcommand{\aRule}{\begin{center} \rule{5in}{1mm} \end{center}}
 
 \title{Generalized Boosted Models:\\A guide to the gbm package} \author{Greg Ridgeway}
 
-%\VignetteIndexEntry{Generalized Boosted Models: A guide to the gbm package} 
+%\VignetteIndexEntry{Generalized Boosted Models: A guide to the gbm package}
 
 \newcommand{\mathgbf}[1]{{\mbox{\boldmath$#1$\unboldmath}}}
 
@@ -25,7 +25,11 @@ This section essentially presents the derivation of boosting described in \cite{
 
 \subsection{Friedman's gradient boosting machine} \label{sec:GradientBoostingMachine}
 
-\begin{figure} \aRule Initialize $\hat f(\mathbf{x})$ to be a constant, $\hat f(\mathbf{x}) = \arg \min_{\rho} \sum_{i=1}^N \Psi(y_i,\rho)$. \\ For $t$ in $1,\ldots,T$ do \begin{enumerate} \item Compute the negative gradient as the working response
+\begin{figure} 
+\aRule Initialize $\hat f(\mathbf{x})$ to be a constant, $\hat f(\mathbf{x}) = \arg \min_{\rho} \sum_{i=1}^N \Psi(y_i,\rho)$. \\ 
+For $t$ in $1,\ldots,T$ do 
+\begin{enumerate} 
+\item Compute the negative gradient as the working response
     \begin{equation}
     z_i = -\frac{\partial}{\partial f(\mathbf{x}_i)} \Psi(y_i,f(\mathbf{x}_i)) \mbox{\Huge $|$}_{f(\mathbf{x}_i)=\hat f(\mathbf{x}_i)}
     \end{equation}
@@ -41,49 +45,57 @@ This section essentially presents the derivation of boosting described in \cite{
 
 Friedman (2001) and the companion paper Friedman (2002) extended the work of Friedman, Hastie, and Tibshirani (2000) and laid the ground work for a new generation of boosting algorithms. Using the connection between boosting and optimization, this new work proposes the Gradient Boosting Machine.
 
-In any function estimation problem we wish to find a regression function, $\hat f(\mathbf{x})$, that minimizes the expectation of some loss function, $\Psi(y,f)$, as shown in (\ref{NonparametricRegression1}). 
+In any function estimation problem we wish to find a regression function, $\hat f(\mathbf{x})$, that minimizes the expectation of some loss function, $\Psi(y,f)$, as shown in (\ref{NonparametricRegression1}).
 
-\begin{eqnarray} 
-\hspace{0.5in} 
-\hat f(\mathbf{x}) &=& \arg \min_{f(\mathbf{x})} \EV_{y,\mathbf{x}} \Psi(y,f(\mathbf{x})) \nonumber \\ \label{NonparametricRegression1} 
+\begin{eqnarray}
+\hspace{0.5in}
+\hat f(\mathbf{x}) &=& \arg \min_{f(\mathbf{x})} \EV_{y,\mathbf{x}} \Psi(y,f(\mathbf{x})) \nonumber \\ \label{NonparametricRegression1}
 &=& \arg \min_{f(\mathbf{x})} \EV_x \left[ \EV_{y|\mathbf{x}} \Psi(y,f(\mathbf{x})) \Big| \mathbf{x} \right]
-\end{eqnarray} 
+\end{eqnarray}
 
-We will focus on finding estimates of $f(\mathbf{x})$ such that \begin{equation} 
-\label{NonparametricRegression2} 
-\hspace{0.5in} 
-\hat f(\mathbf{x}) = \arg \min_{f(\mathbf{x})} \EV_{y|\mathbf{x}} \left[ \Psi(y,f(\mathbf{x}))|\mathbf{x} \right] 
-\end{equation} 
-Parametric regression models assume that $f(\mathbf{x})$ is a function with a finite number of parameters, $\beta$, and estimates them by selecting those values that minimize a loss function (e.g. squared error loss) over a training sample of $N$ observations on $(y,\mathbf{x})$ pairs as in (\ref{eq:Friedman1}). 
-\begin{equation} 
-\label{eq:Friedman1} 
-\hspace{0.5in} 
+We will focus on finding estimates of $f(\mathbf{x})$ such that \begin{equation}
+\label{NonparametricRegression2}
+\hspace{0.5in}
+\hat f(\mathbf{x}) = \arg \min_{f(\mathbf{x})} \EV_{y|\mathbf{x}} \left[ \Psi(y,f(\mathbf{x}))|\mathbf{x} \right]
+\end{equation}
+Parametric regression models assume that $f(\mathbf{x})$ is a function with a finite number of parameters, $\beta$, and estimates them by selecting those values that minimize a loss function (e.g. squared error loss) over a training sample of $N$ observations on $(y,\mathbf{x})$ pairs as in (\ref{eq:Friedman1}).
+\begin{equation}
+\label{eq:Friedman1}
+\hspace{0.5in}
 \hat\beta = \arg \min_{\beta} \sum_{i=1}^N \Psi(y_i,f(\mathbf{x}_i;\beta))
 \end{equation}
-When we wish to estimate $f(\mathbf{x})$ non-parametrically the task becomes more difficult. Again we can proceed similarly to \cite{FHT:2000} and modify our current estimate of $f(\mathbf{x})$ by adding a new function $f(\mathbf{x})$ in a greedy fashion. Letting $f_i = f(\mathbf{x}_i)$, we see that we want to decrease the $N$ dimensional function 
-\begin{eqnarray} 
-\label{EQ:Friedman2} 
-\hspace{0.5in} 
+When we wish to estimate $f(\mathbf{x})$ non-parametrically the task becomes more difficult. Again we can proceed similarly to \cite{FHT:2000} and modify our current estimate of $f(\mathbf{x})$ by adding a new function $f(\mathbf{x})$ in a greedy fashion. Letting $f_i = f(\mathbf{x}_i)$, we see that we want to decrease the $N$ dimensional function
+\begin{eqnarray}
+\label{EQ:Friedman2}
+\hspace{0.5in}
 J(\mathbf{f}) &=& \sum_{i=1}^N \Psi(y_i,f(\mathbf{x}_i)) \nonumber \\
                           &=& \sum_{i=1}^N \Psi(y_i,F_i).
-\end{eqnarray} 
-The negative gradient of $J(\mathbf{f})$ indicates the direction of the locally greatest decrease in $J(\mathbf{f})$.  Gradient descent would then have us modify $\mathbf{f}$ as 
-\begin{equation} 
-\label{eq:Friedman3} 
-\hspace{0.5in} 
+\end{eqnarray}
+The negative gradient of $J(\mathbf{f})$ indicates the direction of the locally greatest decrease in $J(\mathbf{f})$.  Gradient descent would then have us modify $\mathbf{f}$ as
+\begin{equation}
+\label{eq:Friedman3}
+\hspace{0.5in}
 \hat \mathbf{f} \leftarrow \hat \mathbf{f} - \rho \nabla J(\mathbf{f})
-\end{equation} 
+\end{equation}
 where $\rho$ is the size of the step along the direction of greatest descent. Clearly, this step alone is far from our desired goal. First, it only fits $f$ at values of $\mathbf{x}$ for which we have observations.  Second, it does not take into account that observations with similar $\mathbf{x}$ are likely to have similar values of $f(\mathbf{x})$. Both these problems would have disastrous effects on generalization error. However, Friedman suggests selecting a class of functions that use the covariate information to approximate the gradient, usually a regression tree. This line of reasoning produces his Gradient Boosting algorithm shown in Figure~\ref{fig:GradientBoost}. At each iteration the algorithm determines the direction, the gradient, in which it needs to improve the fit to the data and selects a particular model from the allowable class of functions that is in most agreement with the direction. In the case of squared-error loss, $\Psi(y_i,f(\mathbf{x}_i)) = \sum_{i=1}^N (y_i-f(\mathbf{x}_i))^2$, this algorithm corresponds exactly to residual fitting.
 
 There are various ways to extend and improve upon the basic framework suggested in Figure~\ref{fig:GradientBoost}. For example, Friedman (2001) substituted several choices in for $\Psi$ to develop new boosting algorithms for robust regression with least absolute deviation and Huber loss functions. Friedman (2002) showed that a simple subsampling trick can greatly improve predictive performance while simultaneously reduce computation time. Section~\ref{GBMModifications} discusses some of these modifications.
 
 \section{Improving boosting methods using control of the learning rate, sub-sampling, and a decomposition for interpretation} \label{GBMModifications}
 
-This section explores the variations of the previous algorithms that have the potential to improve their predictive performance and interpretability. In particular, by controlling the optimization speed or learning rate, introducing low-variance regression methods, and applying ideas from robust regression we can produce non-parametric regression procedures with many desirable properties. As a by-product some of these modifications lead directly into implementations for learning from massive datasets. All these methods take advantage of the general form of boosting \begin{equation} \hat f(\mathbf{x}) \leftarrow \hat f(\mathbf{x}) + \EV(z(y,\hat f(\mathbf{x}))|\mathbf{x}). \end{equation} So far we have taken advantage of this form only by substituting in our favorite regression procedure for $\EV_w(z|\mathbf{x})$. I will discuss some modifications to estimating $\EV_w(z|\mathbf{x})$ that have the potential to improve our algorithm.
+This section explores the variations of the previous algorithms that have the potential to improve their predictive performance and interpretability. In particular, by controlling the optimization speed or learning rate, introducing low-variance regression methods, and applying ideas from robust regression we can produce non-parametric regression procedures with many desirable properties. As a by-product some of these modifications lead directly into implementations for learning from massive datasets. All these methods take advantage of the general form of boosting 
+\begin{equation} 
+\hat f(\mathbf{x}) \leftarrow \hat f(\mathbf{x}) + \EV(z(y,\hat f(\mathbf{x}))|\mathbf{x}). 
+\end{equation} So far we have taken advantage of this form only by substituting in our favorite regression procedure for $\EV_w(z|\mathbf{x})$. I will discuss some modifications to estimating $\EV_w(z|\mathbf{x})$ that have the potential to improve our algorithm.
 
 \subsection{Decreasing the learning rate} As several authors have phrased slightly differently, ``...boosting, whatever flavor, seldom seems to overfit, no matter how many terms are included in the additive expansion''. This is not true as the discussion to \cite{FHT:2000} points out.
 
-In the update step of any boosting algorithm we can introduce a learning rate to dampen the proposed move. \begin{equation} \label{eq:shrinkage} \hat f(\mathbf{x}) \leftarrow \hat f(\mathbf{x}) + \lambda \EV(z(y,\hat f(\mathbf{x}))|\mathbf{x}). \end{equation} By multiplying the gradient step by $\lambda$ as in equation~\ref{eq:shrinkage} we have control on the rate at which the boosting algorithm descends the error surface (or ascends the likelihood surface). When $\lambda=1$ we return to performing full gradient steps. Friedman (2001) relates the learning rate to regularization through shrinkage.
+In the update step of any boosting algorithm we can introduce a learning rate to dampen the proposed move. 
+\begin{equation} 
+\label{eq:shrinkage} 
+\hat f(\mathbf{x}) \leftarrow \hat f(\mathbf{x}) + \lambda \EV(z(y,\hat f(\mathbf{x}))|\mathbf{x}). 
+\end{equation} 
+By multiplying the gradient step by $\lambda$ as in equation~\ref{eq:shrinkage} we have control on the rate at which the boosting algorithm descends the error surface (or ascends the likelihood surface). When $\lambda=1$ we return to performing full gradient steps. Friedman (2001) relates the learning rate to regularization through shrinkage.
 
 The optimal number of iterations, $T$, and the learning rate, $\lambda$, depend on each other. In practice I set $\lambda$ to be as small as possible and then select $T$ by cross-validation. Performance is best when $\lambda$ is as small as possible performance with decreasing marginal utility for smaller and smaller $\lambda$. Slower learning rates do not necessarily scale the number of optimal iterations. That is, if when $\lambda=1.0$ and the optimal $T$ is 100 iterations, does {\it not} necessarily imply that when $\lambda=0.1$ the optimal $T$ is 1000 iterations.
 
@@ -93,9 +105,18 @@ Friedman (2002) proposed the stochastic gradient boosting algorithm that simply 
 
 \subsection{ANOVA decomposition}
 
-Certain function approximation methods are decomposable in terms of a ``functional ANOVA decomposition''. That is a function is decomposable as \begin{equation} \label{ANOVAdecomp} f(\mathbf{x}) = \sum_j f_j(x_j) + \sum_{jk} f_{jk}(x_j,x_k) + \sum_{jk\ell} f_{jk\ell}(x_j,x_k,x_\ell) + \cdots. \end{equation} This applies to boosted trees. Regression stumps (one split decision trees) depend on only one variable and fall into the first term of \ref{ANOVAdecomp}. Trees with two splits fall into the second term of \ref{ANOVAdecomp} and so on. By restricting the depth of the trees produced on each boosting iteration we can control the order of approximation. Often additive components are sufficient to approximate a multivariate function well, generalized additive models, the na\"{\i}ve Bayes classifier, and boosted stumps for example. When the approximation is restricted to a first order we can also produce plots of $x_j$ versus $f_j(x_j)$ to demonstrate how changes in $x_j$ might affect changes in the response variable.
+Certain function approximation methods are decomposable in terms of a ``functional ANOVA decomposition''. That is a function is decomposable as
+\begin{equation} 
+\label{ANOVAdecomp} 
+f(\mathbf{x}) = \sum_j f_j(x_j) + \sum_{jk} f_{jk}(x_j,x_k) + \sum_{jk\ell} f_{jk\ell}(x_j,x_k,x_\ell) + \cdots. 
+\end{equation} This applies to boosted trees. Regression stumps (one split decision trees) depend on only one variable and fall into the first term of \ref{ANOVAdecomp}. Trees with two splits fall into the second term of \ref{ANOVAdecomp} and so on. By restricting the depth of the trees produced on each boosting iteration we can control the order of approximation. Often additive components are sufficient to approximate a multivariate function well, generalized additive models, the na\"{\i}ve Bayes classifier, and boosted stumps for example. When the approximation is restricted to a first order we can also produce plots of $x_j$ versus $f_j(x_j)$ to demonstrate how changes in $x_j$ might affect changes in the response variable.
 
-\subsection{Relative influence} Friedman (2001) also develops an extension of a variable's ``relative influence'' for boosted estimates. For tree based methods the approximate relative influence of a variable $x_j$ is \begin{equation} \label{RelInfluence} \hspace{0.5in} \hat J_j^2 = \hspace{-0.1in}\sum_{\mathrm{splits~on~}x_j}\hspace{-0.2in}I_t^2 \end{equation} where $I_t^2$ is the empirical improvement by splitting on $x_j$ at that point. Friedman's extension to boosted models is to average the relative influence of variable $x_j$ across all the trees generated by the boosting algorithm.
+\subsection{Relative influence} Friedman (2001) also develops an extension of a variable's ``relative influence'' for boosted estimates. For tree based methods the approximate relative influence of a variable $x_j$ is
+\begin{equation} 
+\label{RelInfluence} 
+\hspace{0.5in} 
+\hat J_j^2 = \hspace{-0.1in}\sum_{\mathrm{splits~on~}x_j}\hspace{-0.2in}I_t^2
+\end{equation} where $I_t^2$ is the empirical improvement by splitting on $x_j$ at that point. Friedman's extension to boosted models is to average the relative influence of variable $x_j$ across all the trees generated by the boosting algorithm.
 
 \begin{figure}
 \aRule
@@ -152,7 +173,13 @@ If \texttt{bag.fraction} is set to be greater than 0 (0.5 is recommended), gbm c
 
 Lastly, gbm offers $v$-fold cross validation for estimating the optimal number of iterations. If when fitting the gbm model, \texttt{cv.folds=5} then gbm will do 5-fold cross validation. gbm will fit five gbm models in order to compute the cross validation error estimate and then will fit a sixth and final gbm model with \texttt{n.trees}iterations using all of the data. The returned model object will have a component labeled \texttt{cv.error}. Note that \texttt{gbm.more} will do additional gbm iterations but will not add to the \texttt{cv.error} component. Use \texttt{gbm.perf(...,method="cv")} to obtain the cross validation estimate.
 
-\begin{figure}[ht] \begin{center} \includegraphics[width=5in]{oobperf2} \end{center} \caption{Out-of-sample predictive performance of four methods of selecting the optimal number of iterations. The vertical axis plots performance relative the best. The boxplots indicate relative performance across thirteen real datasets from the UCI repository. See \texttt{demo(OOB-reps)}.} \label{fig:oobperf} \end{figure}
+\begin{figure}[ht] 
+\begin{center} 
+\includegraphics[width=5in]{oobperf2} 
+\end{center} 
+\caption{Out-of-sample predictive performance of four methods of selecting the optimal number of iterations. The vertical axis plots performance relative the best. The boxplots indicate relative performance across thirteen real datasets from the UCI repository. See \texttt{demo(OOB-reps)}.} 
+\label{fig:oobperf} 
+\end{figure}
 
 Figure~\ref{fig:oobperf} compares the three methods for estimating the optimal number of iterations across 13 datasets. The boxplots show the methods performance relative to the best method on that dataset. For most datasets the method perform similarly, however, 5-fold cross validation is consistently the best of them. OOB, using a 33\% test set, and using a 20\% test set all have datasets for which the perform considerably worse than the best method. My recommendation is to use 5- or 10-fold cross validation if you can afford the computing time. Otherwise you may choose among the other options, knowing that OOB is conservative.
 
@@ -164,7 +191,12 @@ In the equations shown below, for non-zero offset terms, replace $f(\mathbf{x}_i
 
 \subsection{Gaussian}
 
-\begin{tabular}{ll} Deviance & $\displaystyle \frac{1}{\sum w_i} \sum w_i(y_i-f(\mathbf{x}_i))^2$ \\ Initial value & $\displaystyle f(\mathbf{x})=\frac{\sum w_i(y_i-o_i)}{\sum w_i}$ \\ Gradient & $z_i=y_i - f(\mathbf{x}_i)$ \\ Terminal node estimates & $\displaystyle \frac{\sum w_i(y_i-f(\mathbf{x}_i))}{\sum w_i}$ \end{tabular}
+\begin{tabular}{ll} 
+Deviance & $\displaystyle \frac{1}{\sum w_i} \sum w_i(y_i-f(\mathbf{x}_i))^2$ \\ 
+Initial value & $\displaystyle f(\mathbf{x})=\frac{\sum w_i(y_i-o_i)}{\sum w_i}$ \\ 
+Gradient & $z_i=y_i - f(\mathbf{x}_i)$ \\ 
+Terminal node estimates & $\displaystyle \frac{\sum w_i(y_i-f(\mathbf{x}_i))}{\sum w_i}$ 
+\end{tabular}
 
 \subsection{AdaBoost}
 
@@ -189,7 +221,7 @@ Notes: \begin{itemize} \item $\mbox{median}_w(y)$ denotes the weighted median, d
 
 \subsection{Quantile regression}
 
-Contributed by Brian Kriegler.
+Contributed by Brian Kriegler (see \cite{Kriegler:2010}).
 
 \begin{tabular}{ll} Deviance & $\frac{1}{\sum w_i}
    \left(\alpha\sum_{y_i>f(\mathbf{x}_i)} w_i(y_i-f(\mathbf{x}_i))\right. +$ \\
@@ -221,9 +253,22 @@ Initial value & 0 \\ Terminal node estimates & Newton-Raphson algorithm \end{tab
   \item Return to step 2 until convergence
 \end{enumerate}
 
-Notes: \begin{itemize} \item $t_i$ is the survival time and $\delta_i$ is the death indicator. \item $R_i$ denotes the hazard for the risk set, $R_i=\sum_{j=1}^N w_jI(t_j\geq t_i)e^{f(\mathbf{x}_i)}$ \item $k(i)$ indexes the terminal node of observation $i$ \item For speed, \texttt{gbm()} does only one step of the Newton-Raphson algorithm rather than iterating to convergence. No appreciable loss of accuracy since the next boosting iteration will simply correct for the prior iterations inadequacy. \item \texttt{gbm()} initially sorts the data by survival time. Doing this reduces the computation of the risk set from $O(n^2)$ to $O(n)$ at the cost of a single up front sort on survival time. After the model is fit, the data are then put back in their original order. \end{itemize}
+Notes: 
+\begin{itemize} 
+\item $t_i$ is the survival time and $\delta_i$ is the death indicator.
+\item $R_i$ denotes the hazard for the risk set, $R_i=\sum_{j=1}^N w_jI(t_j\geq t_i)e^{f(\mathbf{x}_i)}$ 
+\item $k(i)$ indexes the terminal node of observation $i$ 
+\item For speed, \texttt{gbm()} does only one step of the Newton-Raphson algorithm rather than iterating to convergence. No appreciable loss of accuracy since the next boosting iteration will simply correct for the prior iterations inadequacy.
+\item \texttt{gbm()} initially sorts the data by survival time. Doing this reduces the computation of the risk set from $O(n^2)$ to $O(n)$ at the cost of a single up front sort on survival time. After the model is fit, the data are then put back in their original order.  
+\end{itemize}
 
-\subsection{Poisson} \begin{tabular}{ll} Deviance & -2$\frac{1}{\sum w_i} \sum w_i(y_if(\mathbf{x}_i)-\exp(f(\mathbf{x}_i)))$ \\ Initial value & $\displaystyle f(\mathbf{x})= \log\left(\frac{\sum w_iy_i}{\sum w_ie^{o_i}}\right)$ \\ Gradient & $z_i=y_i - \exp(f(\mathbf{x}_i))$ \\ Terminal node estimates & $\displaystyle \log\frac{\sum w_iy_i}{\sum w_i\exp(f(\mathbf{x}_i))}$ \end{tabular}
+\subsection{Poisson} 
+\begin{tabular}{ll} 
+Deviance & -2$\frac{1}{\sum w_i} \sum w_i(y_if(\mathbf{x}_i)-\exp(f(\mathbf{x}_i)))$ \\ 
+Initial value & $\displaystyle f(\mathbf{x})= \log\left(\frac{\sum w_iy_i}{\sum w_ie^{o_i}}\right)$ \\
+Gradient & $z_i=y_i - \exp(f(\mathbf{x}_i))$ \\ 
+Terminal node estimates & $\displaystyle \log\frac{\sum w_iy_i}{\sum w_i\exp(f(\mathbf{x}_i))}$ 
+\end{tabular}
 
 The Poisson class includes special safeguards so that the most extreme predicted values are $e^{-19}$ and $e^{+19}$. This behavior is consistent with \texttt{glm()}.
 
@@ -238,6 +283,8 @@ The Poisson class includes special safeguards so that the most extreme predicted
 \bibitem{Friedman:2002} J.H. Friedman (2002). ``Stochastic Gradient Boosting,'' \textit{Computational Statistics and Data Analysis} 38(4):367-378.
 
 \bibitem{FHT:2000} J.H. Friedman, T. Hastie, R. Tibshirani (2000). ``Additive Logistic Regression: a Statistical View of Boosting,'' \textit{Annals of Statistics} 28(2):337-374.
+    
+\bibitem{Kriegler:2010} B. Kriegler and R. Berk (2010). ``Small Area Estimation of the Homeless in Los Angeles, An Application of Cost-Sensitive Stochastic Gradient Boosting,'' \textit{Annals of Applied Statistics} 4(3):1234-1255.
 
 \bibitem{Ridgeway:1999} G. Ridgeway (1999). ``The state of boosting,'' \textit{Computing Science and Statistics} 31:172-181.
 
