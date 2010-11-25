@@ -1445,7 +1445,8 @@ gbm.perf <- function(object,
       {  # HS Next line changed to scale axis to include other error
 #         ylim <- range(object$train.error)
         if ( method=="cv" ){ ylim <- range(object$train.error, object$cv.error) }
-        else if ( method == "test" ){ ylim <- range( object$train.error, object$valid.error ) }
+        else if ( method == "test" ){ ylim <- range( object$train.error, object$valid.error) }
+        else { ylim <- range(object$train.error) }
       }
       else
       {
