@@ -890,6 +890,13 @@ gbm.fit <- function(x,y,
          var.names <- paste("X",1:cCols,sep="")
       }
    }
+   j <- apply(x, 2, function(z) any(is.nan(z)))
+   if(any(j))
+   {
+      stop("Use NA for missing values. NaN found in predictor variables:",
+           paste(var.names[j],collapse=","))
+   }
+   
    if(is.null(response.name))
    {
       response.name <- "y"

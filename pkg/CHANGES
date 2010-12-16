@@ -44,6 +44,8 @@ a bug. That's been fixed (Thanks to Trevor Hastie for catching this)
 
 - gbm now uses the R macro R_NaN in the C++ code rather than NAN, which would not compile on Sun OS.
 
+- If covariates marked missing values with NaN instead of NA, the model fit would not be consistent (Thanks to JR Lockwood for noting this)
+
 Changes in version 1.6
 
 - Quantile regression is now available thanks to a contribution from
