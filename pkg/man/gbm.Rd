@@ -46,13 +46,11 @@ gbm.more(object,
          verbose = NULL)
 }
 \arguments{\item{formula}{a symbolic description of the model to be fit. The formula may include an offset term (e.g. y~offset(n)+x). If \code{keep.data=FALSE} in the initial call to \code{gbm} then it is the user's responsibility to resupply the offset to \code{\link{gbm.more}}.}
-\item{distribution}{a character string specifying the name of the distribution to use or a list with a component \code{name} specifying the distribution and any additional parameters needed. If not specified, \code{gbm} will try to guess: if the response has only 2 unique values, bernoulli is assumed; otherwise, if the response is a factor, multinomial is assumed; otherwise, if the response has class "Surv", coxph is assumed; otherwise, bisquare is assumed.
+\item{distribution}{a character string specifying the name of the distribution to use or a list with a component \code{name} specifying the distribution and any additional parameters needed. If not specified, \code{gbm} will try to guess: if the response has only 2 unique values, bernoulli is assumed; otherwise, if the response is a factor, multinomial is assumed; otherwise, if the response has class "Surv", coxph is assumed; otherwise, gaussian is assumed.
 
-Currently available options are "gaussian" (squared error), "laplace" (absolute loss), "bisquare" (bisquare loss), "tdist" (t-distribution loss), "bernoulli" (logistic regression for 0-1 outcomes), "multinomial" (classification when there are more than 2 classes), "adaboost" (the AdaBoost exponential loss for 0-1 outcomes), "poisson" (count outcomes), "coxph" (right censored observations) or "quantile".
+Currently available options are "gaussian" (squared error), "laplace" (absolute loss), "tdist" (t-distribution loss), "bernoulli" (logistic regression for 0-1 outcomes), "multinomial" (classification when there are more than 2 classes), "adaboost" (the AdaBoost exponential loss for 0-1 outcomes), "poisson" (count outcomes), "coxph" (right censored observations) or "quantile".
 
 If quantile regression is specified, \code{distribution} must be a list of the form \code{list(name="quantile",alpha=0.25)} where \code{alpha} is the quantile to estimate. The current version's quantile regression method does not handle non-constant weights and will stop.
-
-If "bisquare" is specified, the method defaults to being 85\% efficient for normally distributed data, and this can be controlled by setting distribution to be a list with 2 elements, the first of which should be \code{name="bisquare"}, the second of which should be \code{eff=c}, where \code{c} is a value between 0.80 and 0.95 representing the method's efficiency when the data are normally distributed.
 
 If "tdist" is specified, the default degrees of freedom is 4 and this can be controlled by specifying \code{distribution=list(name="tdist", df=DF)} where \code{DF} is your chosen degrees of freedom.}
 \item{data}{an optional data frame containing the variables in the model. By default the variables are taken from \code{environment(formula)}, typically the environment from which \code{gbm} is called. If \code{keep.data=TRUE} in the initial call to \code{gbm} then \code{gbm} stores a copy with the object. If \code{keep.data=FALSE} then subsequent calls to \code{\link{gbm.more}} must resupply the same dataset. It becomes the user's responsibility to resupply the same data at this point.}
@@ -109,7 +107,7 @@ B. Kriegler (2007). \emph{Cost-Sensitive Stochastic Gradient Boosting Within a Q
 
 Quantile regression code developed by Brian Kriegler \email{bk@stat.ucla.edu}
 
-Bisquare, t-distribution, and multinomial code developed by Harry Southworth and Daniel Edwards}
+t-distribution and multinomial code developed by Harry Southworth and Daniel Edwards}
 
 \seealso{ \code{\link{gbm.object}}, \code{\link{gbm.perf}}, \code{\link{plot.gbm}}, \code{\link{predict.gbm}}, \code{\link{summary.gbm}}, \code{\link{pretty.gbm.tree}}. }
 

@@ -38,8 +38,8 @@
   above, or the maximum number of trees if the 'best' cannot be
   computed.
   
-  If the 'distribution' was specified as gaussian, laplace, quantile,
-  bisquare or t-distribution, a summary of the residuals is displayed.
+  If the 'distribution' was specified as gaussian, laplace, quantile
+  or t-distribution, a summary of the residuals is displayed.
   The residuals are for the training data with the model at the 'best' 
   number of trees, as
   described above, or the maximum number of trees if the 'best' cannot
