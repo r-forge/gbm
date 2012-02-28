@@ -1,6 +1,5 @@
 basehaz.gbm             Baseline hazard function
 calibrate.plot          Calibration plot
-estBisqParam            Estimate the Bisquare Parameter
 gbm                     Generalized Boosted Regression Modeling
 gbm-package             Generalized Boosted Regression Models
 gbm.object              Generalized Boosted Regression Model Object
