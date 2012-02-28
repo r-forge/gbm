@@ -1,7 +1,7 @@
 # TODO
 # 4. Document the tests of the new functionality.
 # 5. Document the tests comparing the new build to the old for the old methods.
-# 6. Test gbm.more with bisquare and t-dist (ensure Misc gets used properly).
+# 6. Test gbm.more with t-dist (ensure Misc gets used properly).
 
 .First.lib <- function(lib, pkg)
 {
@@ -55,32 +55,6 @@ reconstructGBMdata <- function(x)
    invisible(d)
 }
 
-
-estBisqParam <- function(x=0.85)
-{
-   if (is.null(x) || !is.numeric( x ))
-   {
-      Misc <- 3.443689
-   } else 
-   if ( x < 0.80 | x > 0.95 )
-   {
-      stop("Only bisquare efficiency between 0.8 and 0.95 is currently supported")
-   } else 
-   { 
-      # Borrowed from lmRob.fit.compute in the robust package
-      if (x==0.95){ Misc <- 4.685061 }
-      else if (x==0.90){ Misc <- 3.882646 }
-      else if (x==0.85){ Misc <- 3.443689 }
-      else if (x==0.80){ Misc <- 3.136909 }
-      else 
-      {
-         s <- spline(c(0.80,0.85,0.90,0.95), 
-                     c(3.136909,3.443689,3.882646,4.685061), n=500)
-         Misc <- s$y[ abs( s$x - x ) == min( abs( s$x - x ) ) ]
-      }
-   }
-   return(Misc)
-}
 
 print.gbm <- function(x, ... )
 {
@@ -152,7 +126,7 @@ print.gbm <- function(x, ... )
       cat("\nPrediction Accuracy = ", pred.acc, "%\n", sep = "") 
    }
    else if (x$distribution$name %in% 
-            c("gaussian", "laplace", "poisson", "quantile", "bisquare", "tdist" ) )
+            c("gaussian", "laplace", "poisson", "quantile", "tdist" ) ) 
    {
       r <- d[, 1] - predict( x, type="response", newdata=d, n.tree=best )
       if ( x$distribution$name == "poisson" )
@@ -748,9 +722,6 @@ gbm.more <- function(object,
          if(!is.na(offset)) offset <- offset[i.timeorder]
          object$fit <- object$fit[i.timeorder]
       }
-      else if (object$distribution$name == "bisquare" ){
-         Misc <- estBisqParam(object$distribution$eff)
-      }
       else if(object$distribution$name == "tdist" ){
          Misc <- object$distribution$df
       }
@@ -988,7 +959,7 @@ gbm.fit <- function(x,y,
    }
    supported.distributions <-
       c("bernoulli","gaussian","poisson","adaboost","laplace","coxph","quantile",
-        "bisquare", "tdist", "multinomial", "huberized")
+        "tdist", "multinomial", "huberized")
    # check potential problems with the distributions
    if(!is.element(distribution$name,supported.distributions))
    {
@@ -1061,9 +1032,6 @@ gbm.fit <- function(x,y,
       x <- x[i.timeorder,,drop=FALSE]
       w <- w[i.timeorder]
       if(!is.na(offset)) offset <- offset[i.timeorder]
-   }
-   if(distribution$name == "bisquare")   {
-          Misc <- estBisqParam( distribution$eff )
    }
    if(distribution$name == "tdist")
    {
@@ -1267,7 +1235,7 @@ gbm <- function(formula = formula(data),
      else if ( class( y ) == "Surv" ){ distribution <- "coxph" }
      else if ( is.factor( y ) ){ distribution <- "multinomial" }
      else{
-        distribution <- "bisquare"
+        distribution <- "gaussian"
      }
      cat( paste( "Distribution not specified, assuming", distribution, "...\n" ) )
    }
@@ -1445,7 +1413,6 @@ gbm.perf <- function(object,
                                la="Absolute loss",
                                qu="Quantile loss",
                                mu="Multinomial deviance",
-                               bi="Bisquare loss",
                                td="t-distribution deviance"
                     )
       if(object$train.fraction==1)
