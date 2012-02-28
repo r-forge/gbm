@@ -1,10 +1,10 @@
 //------------------------------------------------------------------------------
 //  GBM alteration by Daniel Edwards
 //
-//  File:       bisquare.h
+//  File:       multinomial.h
 //
 //
-//  Contains:   Distribution object to implement bisquare
+//  Contains:   Distribution object to implement multinomial
 //
 //  History:    04/04/2008   Created
 //                    

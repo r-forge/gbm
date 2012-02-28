@@ -2,11 +2,11 @@
 //  GBM alteration by Daniel Edwards
 //  File:       locationm.cpp
 //
-//  Purpose:    Class to provide methods to calculate the location M-estimates 
+//  Purpose:    Class to provide methods to calculate the location M-estimates
 //              of a variety of functions
 //
 //  History:    31/03/2008 created
-//        
+//
 //------------------------------------------------------------------------------
 
 
@@ -57,7 +57,7 @@ CLocationM::~CLocationM()
 //             adV    - Vector of doubles
 //             adW    - Array of weights
 //             dAlpha - Quantile to calculate (0.5 for median)
-//            
+//
 // Returns :   Weighted quantile
 /////////////////////////////////////////////////
 double CLocationM::Median(int iN, double *adV, double *adW)
@@ -133,29 +133,21 @@ double CLocationM::Median(int iN, double *adV, double *adW)
 /////////////////////////////////////////////////
 // PsiFun
 //
-// Function to calculate the psi of the supplied 
-// value, given the type of function to use and 
+// Function to calculate the psi of the supplied
+// value, given the type of function to use and
 // the supplied parameters
 //
 // Parameters: dX - Value
-//            
+//
 // Returns :   Psi(X)
 /////////////////////////////////////////////////
 double CLocationM::PsiFun(double dX)
 {
 	// Local variables
 	double dPsiVal = 0.0;
-	
+
 	// Switch on the type of function
-	if(strncmp(msType,"bisquare",2) == 0)
-    {
-		if (fabs(dX) < madParams[0])
-		{
-			dPsiVal = 1 - ((dX/madParams[0]) * (dX/madParams[0]));
-			dPsiVal = dX * dPsiVal * dPsiVal;
-		}
-	}
-	else if(strncmp(msType,"tdist",2) == 0)
+	if(strncmp(msType,"tdist",2) == 0)
 	{
 		dPsiVal = dX / (madParams[0] + (dX * dX));
 	}
@@ -171,14 +163,14 @@ double CLocationM::PsiFun(double dX)
 /////////////////////////////////////////////////
 // LocationM
 //
-// Function to calculate location M estimate for 
+// Function to calculate location M estimate for
 // the supplied weighted data, with the psi-function
 // type and parameters specified in this class
 //
 // Parameters: iN  - Number of data points
 //             adX - Data vector
 //             adW - Weight vector
-//            
+//
 // Returns :   Location M-Estimate of (X, W)
 /////////////////////////////////////////////////
 double CLocationM::LocationM(int iN, double *adX, double *adW)

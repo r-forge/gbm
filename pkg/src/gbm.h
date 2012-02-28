@@ -6,7 +6,7 @@
 //  License:    GNU GPL (version 2 or later)
 //
 //  Contents:   Entry point for gbm.dll
-//            
+//
 //  Owner:      gregr@rand.org
 //
 //  History:    2/14/2003   gregr created
@@ -25,7 +25,6 @@
 #include "coxph.h"
 #include "laplace.h"
 #include "quantile.h"
-#include "bisquare.h"
 #include "tdist.h"
 #include "multinomial.h"
 #include "gbm_engine.h"

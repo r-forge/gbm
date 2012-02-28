@@ -105,15 +105,6 @@ unsigned long gbm_setup
             goto Error;
         }
     }
-    else if(strncmp(pszFamily,"bisquare",2) == 0)
-    {
-        pDist = new CBisquare(adMisc[0]);
-        if(pDist==NULL)
-        {
-            hr = GBM_OUTOFMEMORY;
-            goto Error;
-        }
-    }
     else if(strncmp(pszFamily,"tdist",2) == 0)
     {
         pDist = new CTDist(adMisc[0]);
