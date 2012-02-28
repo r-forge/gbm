@@ -5,7 +5,7 @@ of the version number.
 
 Major changes:
 - Several new distributions are now available thanks to Harry Southworth 
-and Daniel Edwards: multinomial, bisquare, and tdist.
+and Daniel Edwards: multinomial and tdist.
 
 - The gbm package is now managed on R-Forge by Greg Ridgeway and 
 Harry Southworth. Visit http://r-forge.r-project.org/projects/gbm/
@@ -19,9 +19,8 @@ Minor changes:
 - Added print.gbm and show.gbm. These give basic summaries of the fitted 
 model
 
-- Added support functions estBisqParam() (for the bisquare) and 
-reconstructGBMdata() to facilitate reconstituting the data for
-certain plots and summaries
+- Added support function and reconstructGBMdata() to facilitate reconstituting
+the data for certain plots and summaries
 
 - gbm was not using the weights when using cross-validation due to 
 a bug. That's been fixed (Thanks to Trevor Hastie for catching this)
