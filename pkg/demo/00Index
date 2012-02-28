@@ -4,4 +4,4 @@ coxph          example of boosting the Cox propotional hazards model
 OOB-reps       experiment testing the predictive performance of the OOB estimator
 multinomial    example of multiclass prediction
 printExamples  simple examples used to test gbm updates
-robustReg      comparison of gaussian, bisquare, and t-distribution
+robustReg      comparison of gaussian and t-distribution
