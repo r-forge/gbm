@@ -3,16 +3,16 @@
 # 5. Document the tests comparing the new build to the old for the old methods.
 # 6. Test gbm.more with t-dist (ensure Misc gets used properly).
 
-.First.lib <- function(lib, pkg)
+.onLoad <- function(lib, pkg)
 {
-     library.dynam("gbm", pkg, lib)
+#     library.dynam("gbm", pkg, lib)
 #     require(survival)
 #     require(splines)
 #     require(lattice)
      vers <- library(help=gbm)$info[[1]]
      vers <- vers[grep("Version:",vers)]
      vers <- rev(strsplit(vers," ")[[1]])[1]
-     packageStartupMessage("Loaded gbm",vers,"\n")     
+     packageStartupMessage(paste("Loaded gbm",vers))     
 }
 
 
