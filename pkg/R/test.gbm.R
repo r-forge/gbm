@@ -209,4 +209,58 @@ test.gbm <- function(){
     invisible()
 }
 
+################################################################################
+########################### test.relative.influence() ##########################
+###########################                           ##########################
+
+test.relative.influence <- function(){
+    # Test that relative.influence really does pick out the true predictors
+    set.seed(1234)
+    X1 <- matrix(nrow=1000, ncol=50)
+    X1 <- apply(X1, 2, function(x) rnorm(1000)) # Random noise
+    X2 <- matrix(nrow=1000, ncol=5)
+    X2 <- apply(X2, 2, function(x) c(rnorm(500), rnorm(500, 3))) # Real predictors
+    cls <- rep(c(0, 1), ea=500) # Class 
+    X <- data.frame(cbind(X1, X2, cls))
+    mod <- gbm(cls ~ ., data= X, n.trees=1000, cv.folds=5,
+                shrinkage=.01, interaction.depth=2)
+    ri <- rev(sort(relative.influence(mod)))
+    wh <- names(ri)[1:5]
+    res <- sum(wh %in% paste("V", 51:55, sep = ""))
+    checkEqualsNumeric(res, 5, msg="Testing relative.influence identifies true predictors")
+}
+
+################################################################################
+################################ validate.gpd() ################################
+################################                ################################
+
+validate.gbm <- function () {
+   check <- "package:RUnit" %in% search()
+   if (!check) {
+       check <- try(library(RUnit))
+       if (class(check) == "try-error") {
+           stop("You need to attach the RUnit package to validate gbm")
+       }
+   }
+
+   wh <- (1:length(search()))[search() == "package:gbm"]
+   tests <- objects(wh)[substring(objects(wh), 1, 5) == "test."]
+
+   # Create temporary directory to put tests into
+   if (.Platform$OS.type == "windows"){ sep <- "\\" }
+   else { sep <- "/" }
+
+   dir <- file.path(tempdir(), "gbm.tests", fsep = sep)
+
+   dir.create(dir)
+
+   for (i in 1:length(tests)) {
+       str <- paste(dir, sep, tests[i], ".R", sep = "")
+       dump(tests[i], file = str)
+   }
+   res <- defineTestSuite("gbm", dirs = dir, testFuncRegexp = "^test.+", testFileRegexp = "*.R")
+   cat("Running gbm test suite.\nThis will take some time...\n\n")
+   res <- runTestSuite(res)
+   res
+}
 
