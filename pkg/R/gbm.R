@@ -6,13 +6,13 @@
 .First.lib <- function(lib, pkg)
 {
      library.dynam("gbm", pkg, lib)
-     require(survival)
-     require(splines)
-     require(lattice)
+#     require(survival)
+#     require(splines)
+#     require(lattice)
      vers <- library(help=gbm)$info[[1]]
      vers <- vers[grep("Version:",vers)]
      vers <- rev(strsplit(vers," ")[[1]])[1]
-     cat("Loaded gbm",vers,"\n")     
+     packageStartupMessage("Loaded gbm",vers,"\n")     
 }
 
 

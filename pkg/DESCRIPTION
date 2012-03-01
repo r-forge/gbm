@@ -5,6 +5,7 @@ Title: Generalized Boosted Regression Models
 Author: Greg Ridgeway <gregr@rand.org> with contributions from others
 Maintainer: Greg Ridgeway <gregr@rand.org>
 Depends: R (>= 2.9.0), survival, lattice, splines
+Suggests: RUnit
 Description: This package implements extensions
   to Freund and Schapire's AdaBoost algorithm and Friedman's
   gradient boosting machine. Includes regression methods for least
